@@ -4,11 +4,11 @@
 #   ./launch_chrome.ps1              порт слушает только 127.0.0.1
 #   ./launch_chrome.ps1 -ForDocker   порт открыт наружу; для Docker Desktop
 #                                    НЕ нужен — он проксирует host.docker.internal
-#                                    в loopback (docs/ADR.md ADR-026)
+#                                    в loopback (docs/DECISIONS.md ADR-026)
 #
 # Файл сохранён в UTF-8 С BOM и должен таким остаться: Windows PowerShell 5.1
 # без BOM читает .ps1 как ANSI, русские строки распадаются на мусор, и скрипт
-# падает разбором ещё до первой команды (docs/ADR.md ADR-033).
+# падает разбором ещё до первой команды (docs/DECISIONS.md ADR-033).
 
 param(
     [switch]$ForDocker

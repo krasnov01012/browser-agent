@@ -10,13 +10,13 @@
 #
 # Файл сохранён в UTF-8 С BOM и должен таким остаться: Windows PowerShell 5.1
 # без BOM читает .ps1 как ANSI, и кириллица разваливается ещё до первой
-# команды (docs/ADR.md ADR-033).
+# команды (docs/DECISIONS.md ADR-033).
 
 $ErrorActionPreference = "Stop"
 
 $Port = 9222
 # 127.0.0.1, а не localhost: Chrome держит отладочный порт только на IPv4,
-# а localhost на Windows резолвится сначала в ::1 (docs/ADR.md ADR-004).
+# а localhost на Windows резолвится сначала в ::1 (docs/DECISIONS.md ADR-004).
 $Origin = "http://127.0.0.1:$Port"
 
 & (Join-Path $PSScriptRoot "launch_chrome.ps1")

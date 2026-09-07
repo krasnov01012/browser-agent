@@ -112,7 +112,7 @@ class BrowserController:
         там уже недоступна — его формирует Playwright. Chrome принимает Host
         либо `localhost`, либо IP-адрес, поэтому имя хоста в адресе заменяется
         на разрешённый IP: `host.docker.internal` он отвергает, `192.168.65.2` —
-        принимает (docs/ADR.md ADR-026).
+        принимает (docs/DECISIONS.md ADR-026).
         """
         url = self._settings.cdp_url
         parts = urlparse(url)
@@ -194,7 +194,7 @@ class BrowserController:
                 # а сам браузер: его закрыли, он обновился или соединение оборвалось.
                 # Ошибку Playwright здесь нельзя выпускать наружу как есть: выше её
                 # никто не ждёт, и падение уносит весь набор замеров вместе с уже
-                # пройденными задачами (docs/ADR.md ADR-031).
+                # пройденными задачами (docs/DECISIONS.md ADR-031).
                 raise BrowserUnavailable(f"соединение с Chrome потеряно ({e})") from e
             self._attach(self._page)
             return self._page

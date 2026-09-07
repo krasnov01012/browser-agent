@@ -1,6 +1,6 @@
 # Запуск:
 #   1. на хосте:  powershell -File scripts/launch_chrome.ps1
-#      (порт наружу открывать не надо — см. docs/ADR.md ADR-026)
+#      (порт наружу открывать не надо — см. docs/DECISIONS.md ADR-026)
 #   2. здесь:     docker compose up --build
 #   3. панель:    http://localhost:8000
 #

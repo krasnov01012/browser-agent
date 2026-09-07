@@ -233,7 +233,7 @@ async def main(args: argparse.Namespace) -> int:
                     # Упавшая задача — это результат «провал», а не конец набора.
                     # Замер `order_form`+`vacancies` уже терялся целиком из-за
                     # исключения на 22-м шаге второй задачи: первая была пройдена,
-                    # но сводка не дошла до диска (docs/ADR.md ADR-031).
+                    # но сводка не дошла до диска (docs/DECISIONS.md ADR-031).
                     logging.getLogger("evals").exception("задача %s упала", case.id)
                     attempt = crashed(case, run_index, e)
                 attempts.append(attempt)

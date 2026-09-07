@@ -87,7 +87,7 @@ writing `page.content()` into a message, you have broken the core requirement.
 | Packaging | `pyproject.toml`, `uv` or `pip` | Docker for the agent only |
 | Async | everything `async` | no sync Playwright API |
 
-Do not add dependencies without a line in `docs/ADR.md` explaining why.
+Do not add dependencies without a line in `docs/DECISIONS.md` explaining why.
 
 **Explicitly banned dependencies:** `browser-use`, `stagehand`, `skyvern`,
 `nanobrowser`, `lavague`, `agentql`, `helium`, or any library that contains an agent
@@ -230,7 +230,7 @@ Rules:
   z.ai and Gemini cache implicitly. Both live behind the same `cacheable=True` flag.
   Note `glm-4.6v-flash` does **not** cache — delta snapshots carry that weight instead.
 - Model choices are measured, not assumed. Re-run `scripts/smoke_llm.py` before
-  changing any model in `.env`, and record the numbers in `docs/ADR.md`.
+  changing any model in `.env`, and record the numbers in `docs/DECISIONS.md`.
 
 ---
 
@@ -250,7 +250,7 @@ Every change must respect:
    the main context.
 5. **Hard caps.** `MAX_STEPS` and `MAX_TASK_INPUT_TOKENS` abort a runaway task.
 
-Any PR that raises average tokens-per-step needs a note in `docs/ADR.md`.
+Any PR that raises average tokens-per-step needs a note in `docs/DECISIONS.md`.
 
 ---
 
@@ -293,7 +293,7 @@ including the fallback chain. Run the second one after any change under `llm/`.
 `check_provider.py` is a different question: not "does it answer" but "is it really
 Anthropic". It costs real tokens, so run it once per new key, not routinely — it
 detects a dead prefix cache, an ignored `max_tokens`, a foreign injected system
-prompt, and invented `usage` numbers. See `docs/PROVIDERS.md`.
+prompt, and invented `usage` numbers. See `docs/DECISIONS.md`, ADR-036 and ADR-037.
 
 Never launch a headless browser. The assignment requires a visible one.
 
@@ -308,5 +308,5 @@ Never launch a headless browser. The assignment requires a visible one.
   a real mailbox / hh.ru profile. The repository is **public**.
 - Do not paste raw page dumps or full run logs into an AI chat while developing.
   Grep the JSONL log instead. One snapshot is ~5–15k tokens.
-- Do not silently widen scope. The deadline is fixed; see `docs/ROADMAP.md` for what
-  is in and what is explicitly cut.
+- Do not silently widen scope. What is deliberately out of scope is listed in
+  `docs/LIMITATIONS.md`; adding to it is a decision, not a detail.

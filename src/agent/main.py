@@ -160,7 +160,7 @@ def cli(argv: list[str] | None = None) -> int:
         if args.mcp:
             from .mcp.server import serve_stdio
 
-            # Ни одной печати в stdout: там протокол (docs/ADR.md ADR-040).
+            # Ни одной печати в stdout: там протокол (docs/DECISIONS.md ADR-040).
             asyncio.run(serve_stdio(settings))
             return 0
         if args.ui:

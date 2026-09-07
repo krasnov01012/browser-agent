@@ -1,0 +1,11 @@
+.venv/
+.git/
+.env
+__pycache__/
+*.pyc
+runs/
+memory/
+evals/results.json
+docs/
+*.md
+!README.md

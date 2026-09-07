@@ -1,0 +1,60 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "browser-agent"
+version = "0.1.0"
+description = "Autonomous AI agent that drives a real browser to complete multi-step tasks"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+
+dependencies = [
+    "httpx>=0.27",
+    "playwright>=1.48",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "python-dotenv>=1.0",
+    "trafilatura>=1.12",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.7",
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+]
+# MCP не на критическом пути: агент работает без него, и тянуть протокольный
+# SDK со всей его обвязкой в основную установку незачем (docs/ADR.md ADR-040).
+# Версия 2.x обязательна — в 1.x обработчики регистрировались декораторами,
+# и код отсюда там не соберётся.
+mcp = [
+    "mcp>=2.1,<3",
+]
+
+[project.scripts]
+browser-agent = "agent.main:cli"
+browser-agent-mcp = "agent.main:mcp_cli"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agent"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+ignore = [
+    "B008",
+    # Комментарии и докстринги на русском — кириллица не «неоднозначный символ»
+    "RUF001",
+    "RUF002",
+    "RUF003",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

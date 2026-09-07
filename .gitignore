@@ -1,0 +1,33 @@
+# Любой .env, а не только два известных имени: .env.backup, .env.zai и прочее
+# появляются по ходу работы и содержат ключи. .env.example перечислен ниже.
+.env
+.env.*
+!.env.example
+runs/
+memory/
+screenshots/
+*.log
+
+# Рабочая документация: журнал решений на сорок с лишним записей, план по фазам,
+# исследование. Это кухня, она писалась для себя и растёт быстрее, чем
+# её кто-то станет читать. Всё, что нужно для приёмки работы, лежит
+# в docs1/ и в README.md.
+docs/
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+chrome-profile/
+user-data-dir/

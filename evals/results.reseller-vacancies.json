@@ -1,0 +1,35 @@
+{
+ "at": "2026-09-04 12:32",
+ "summary": [
+  {
+   "id": "vacancies",
+   "runs": 1,
+   "passed": 0,
+   "success_rate": 0.0,
+   "steps_median": 40,
+   "tokens_in_median": 280209,
+   "tokens_out_median": 7814,
+   "seconds_median": 1385.0
+  }
+ ],
+ "attempts": [
+  {
+   "case_id": "vacancies",
+   "run": 1,
+   "passed": false,
+   "reasons": [
+    "успех False, ожидался True",
+    "в отчёте нет «python»"
+   ],
+   "steps": 40,
+   "tokens_in": 280209,
+   "tokens_out": 7814,
+   "elapsed_s": 1385.0,
+   "errors": {
+    "failed": 2,
+    "covered": 4
+   },
+   "run_id": "122153aa3b06"
+  }
+ ]
+}

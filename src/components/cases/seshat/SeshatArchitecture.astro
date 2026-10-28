@@ -1,0 +1,231 @@
+---
+/**
+ * 04 Архитектура: переключатель «Продукт / Инженерия». Схема — доступный DOM-список,
+ * не canvas: всё читается без анимации и указателя. Сигнал проходит путь один раз.
+ */
+import CaseHead from '@/components/cases/CaseHead.astro';
+import { seshat } from '@/content/seshat';
+import type { Locale } from '@/i18n';
+
+interface Props {
+  locale: Locale;
+}
+const c = seshat[Astro.props.locale].architecture;
+const views = [
+  { id: 'product', label: c.views.product, nodes: c.product },
+  { id: 'engineering', label: c.views.engineering, nodes: c.engineering },
+];
+---
+
+<section class="s-arch section theme-seshat" data-scene="architecture" aria-labelledby="s-arch-title">
+  <div class="shell" data-tabs>
+    <div class="s-arch__head">
+      <CaseHead index={c.index} lines={c.titleLines} id="s-arch-title" />
+      <div class="s-arch__side">
+        <p class="lead" data-reveal>{c.deck}</p>
+        <div class="s-arch__switch" role="tablist" aria-label={c.index}>
+          {
+            views.map((v, i) => (
+              <button type="button" role="tab" id={`s-arch-tab-${v.id}`} aria-controls={`s-arch-${v.id}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1}>
+                {v.label}
+              </button>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+
+    <div>
+      {
+        views.map((v, i) => (
+          <div class="s-arch__view" role="tabpanel" id={`s-arch-${v.id}`} aria-labelledby={`s-arch-tab-${v.id}`} tabindex="0" data-tab-hidden={i !== 0 ? '' : undefined} data-reveal>
+            <ol class="flow">
+              {v.nodes.map((n, k) => (
+                <li class="flow__node" style={`--k:${k}`}>
+                  <span class="label flow__idx">{String(k + 1).padStart(2, '0')}</span>
+                  <span class="flow__title">{n.title}</span>
+                  <span class="flow__text">{n.text}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ))
+      }
+      <p class="provenance s-arch__note">{c.note}</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .s-arch__head {
+    display: grid;
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+    gap: 32px var(--col-gap);
+    align-items: end;
+    margin-bottom: clamp(48px, 6vw, 88px);
+  }
+
+  .s-arch__head :global(.chead) {
+    margin-bottom: 0;
+  }
+
+  .s-arch__side {
+    display: grid;
+    gap: 28px;
+    justify-items: start;
+  }
+
+  .s-arch__switch {
+    display: inline-flex;
+    border: var(--hairline) solid var(--line-strong);
+    border-radius: 2px;
+  }
+
+  .s-arch__switch button {
+    min-height: 46px;
+    padding: 0 20px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+  }
+
+  .s-arch__switch button[aria-selected='true'] {
+    color: var(--seshat-wine);
+    background: var(--seshat-signal);
+  }
+
+  /* ——— Поток ——— */
+  .flow {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .flow::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 22px;
+    height: var(--hairline);
+    background: var(--line-strong);
+  }
+
+  .flow::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 21px;
+    width: 64px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--seshat-signal));
+    box-shadow: 0 0 14px var(--seshat-signal);
+    opacity: 0;
+  }
+
+  :global(.motion) .s-arch__view.is-in .flow::after {
+    animation: flow-trace 1500ms var(--ease-in-out) 300ms both;
+  }
+
+  @keyframes flow-trace {
+    0% {
+      left: 0;
+      opacity: 0;
+    }
+    10%,
+    85% {
+      opacity: 1;
+    }
+    100% {
+      left: calc(100% - 64px);
+      opacity: 0;
+    }
+  }
+
+  .flow__node {
+    position: relative;
+    display: grid;
+    align-content: start;
+    gap: 10px;
+    padding: 48px 20px 24px;
+    min-height: 210px;
+    background: var(--seshat-panel);
+    border: var(--hairline) solid var(--line);
+    border-radius: 3px;
+    transition: border-color var(--dur-s) var(--ease-out), transform var(--dur-m) var(--ease-out);
+  }
+
+  .flow__node::before {
+    content: '';
+    position: absolute;
+    top: 17px;
+    left: 20px;
+    width: 11px;
+    height: 11px;
+    background: var(--seshat-wine);
+    border: 1.5px solid var(--seshat-signal);
+    transform: rotate(45deg);
+  }
+
+  .flow__node:hover {
+    border-color: var(--line-strong);
+    transform: translateY(-4px);
+  }
+
+  .flow__idx {
+    position: absolute;
+    top: 16px;
+    right: 18px;
+  }
+
+  .flow__title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+
+  .flow__text {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--fg-muted);
+  }
+
+  .s-arch__note {
+    margin-top: 24px;
+  }
+
+  @media (max-width: 1023px) {
+    .s-arch__head {
+      grid-template-columns: 1fr;
+    }
+
+    .flow {
+      grid-template-columns: 1fr;
+    }
+
+    .flow::before {
+      left: 25px;
+      right: auto;
+      top: 0;
+      bottom: 0;
+      width: var(--hairline);
+      height: auto;
+    }
+
+    .flow::after {
+      display: none;
+    }
+
+    .flow__node {
+      min-height: 0;
+      padding: 18px 20px 18px 56px;
+    }
+
+    .flow__node::before {
+      top: 22px;
+    }
+  }
+</style>

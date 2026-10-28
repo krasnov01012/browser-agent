@@ -1,0 +1,109 @@
+---
+/**
+ * Финал кейса: возврат в графит и коралл Krasnoff — следующий кейс + общий CTA
+ * (форма на главной с контекстом source/intent, без цен).
+ */
+import Arrow from '@/components/ui/Arrow.astro';
+import { localizePath, type Locale } from '@/i18n';
+
+interface Props {
+  locale: Locale;
+  label: string;
+  name: string;
+  teaser: string;
+  href: string;
+  ctaTitle: string;
+  ctaText: string;
+  cta: string;
+  source: string;
+  /** Подпись контекста в форме — название текущего кейса. */
+  current: string;
+  accent: string;
+}
+const { locale, label, name, teaser, href, ctaTitle, ctaText, cta, source, current, accent } = Astro.props;
+const contact = `${localizePath('/', locale)}?source=${source}&intent=similar_project&label=${encodeURIComponent(current)}#contact`;
+---
+
+<section class="next section theme-dark" aria-label={label}>
+  <div class="shell next__grid">
+    <a class="next__case" href={href} style={`--case-accent:${accent}`}>
+      <span class="label">{label}</span>
+      <span class="next__name">
+        {name}<span class="next__dot">.</span>
+        <Arrow class="next__arrow" />
+      </span>
+      <span class="body">{teaser}</span>
+    </a>
+    <div class="next__cta">
+      <h2 class="h3">{ctaTitle}</h2>
+      <p class="body">{ctaText}</p>
+      <a class="btn btn--primary" href={contact}>
+        <span>{cta}</span>
+        <Arrow />
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .next__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: 48px var(--col-gap);
+    align-items: end;
+  }
+
+  .next__case {
+    display: grid;
+    gap: 18px;
+  }
+
+  .next__name {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 0.06em;
+    font-size: clamp(4rem, 2rem + 9vw, 11rem);
+    font-weight: 660;
+    line-height: 0.82;
+    letter-spacing: -0.06em;
+    text-transform: uppercase;
+    transition: color var(--dur-s) var(--ease-out);
+  }
+
+  .next__dot {
+    color: var(--case-accent);
+  }
+
+  .next__case:hover .next__name {
+    color: var(--case-accent);
+  }
+
+  .next__case :global(.next__arrow) {
+    width: 0.34em;
+    height: 0.34em;
+    margin-left: 0.16em;
+    color: var(--coral);
+    stroke-width: 1.2;
+  }
+
+  .next__cta {
+    display: grid;
+    gap: 20px;
+    justify-items: start;
+    padding-left: clamp(0px, 3vw, 48px);
+    border-left: var(--hairline) solid var(--line);
+  }
+
+  @media (max-width: 1023px) {
+    .next__grid {
+      grid-template-columns: 1fr;
+    }
+
+    .next__cta {
+      padding-left: 0;
+      border-left: 0;
+      padding-top: 32px;
+      border-top: var(--hairline) solid var(--line);
+    }
+  }
+</style>

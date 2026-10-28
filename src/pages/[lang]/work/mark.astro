@@ -1,0 +1,166 @@
+---
+/**
+ * Кейс MARK v1.2 — 7 сцен. Арт-направление Signal over Noise утверждено;
+ * факты по реализации — только после аудита кода, поэтому страница закрыта от индексации.
+ */
+import Base from '@/layouts/Base.astro';
+import MarkHero from '@/components/cases/mark/MarkHero.astro';
+import MarkPipeline from '@/components/cases/mark/MarkPipeline.astro';
+import MarkDecision from '@/components/cases/mark/MarkDecision.astro';
+import MarkOutput from '@/components/cases/mark/MarkOutput.astro';
+import CaseHead from '@/components/cases/CaseHead.astro';
+import CaseRows from '@/components/cases/CaseRows.astro';
+import StatusColumns from '@/components/cases/StatusColumns.astro';
+import CaseNext from '@/components/cases/CaseNext.astro';
+import { mark } from '@/content/mark';
+import { locales, localizePath, type Locale } from '@/i18n';
+
+export function getStaticPaths() {
+  return locales.map((lang) => ({ params: { lang } }));
+}
+
+const locale = Astro.params.lang as Locale;
+const c = mark[locale];
+---
+
+<Base locale={locale} path="/work/mark/" title={c.meta.title} description={c.meta.description} noindex>
+  <MarkHero locale={locale} />
+
+  <section class="section theme-light m-ch" data-scene="challenge" aria-labelledby="m-ch-title">
+    <div class="shell m-ch__grid">
+      <CaseHead class="m-ch__head" index={c.challenge.index} lines={c.challenge.titleLines} id="m-ch-title" />
+      <p class="lead m-ch__body" data-reveal>{c.challenge.body}</p>
+      <ol class="m-ch__points" data-reveal-group>
+        {
+          c.challenge.points.map((p, i) => (
+            <li data-reveal>
+              <span class="label">{String(i + 1).padStart(2, '0')} /</span>
+              <h3 class="h4">{p.title}</h3>
+              <p class="body">{p.text}</p>
+            </li>
+          ))
+        }
+      </ol>
+      <p class="m-ch__band label">
+        {c.challenge.band.map((b, i) => <span>{i > 0 && <i aria-hidden="true">→</i>}{b}</span>)}
+      </p>
+    </div>
+  </section>
+
+  <MarkPipeline locale={locale} />
+  <MarkDecision locale={locale} />
+  <MarkOutput locale={locale} />
+
+  <section class="section theme-light m-eng" data-scene="engineering" aria-labelledby="m-eng-title">
+    <div class="shell">
+      <CaseHead index={c.engineering.index} lines={c.engineering.titleLines} id="m-eng-title" />
+      <CaseRows rows={c.engineering.rows} status="verify" />
+      <div class="m-eng__status">
+        <StatusColumns columns={[c.engineering.status.implemented, c.engineering.status.verify, c.engineering.status.not]} />
+      </div>
+    </div>
+  </section>
+
+  <CaseNext
+    locale={locale}
+    label={c.next.label}
+    name={c.next.name}
+    teaser={c.next.teaser}
+    href={localizePath('/work/seshat/', locale)}
+    ctaTitle={c.next.ctaTitle}
+    ctaText={c.next.ctaText}
+    cta={c.next.cta}
+    source="mark_case"
+    current="Mark"
+    accent="var(--seshat-signal)"
+  />
+</Base>
+
+<style>
+  .m-ch,
+  .m-eng {
+    --signal: var(--mark-signal);
+    --accent: #17707a;
+  }
+
+  .m-ch__grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 40px var(--col-gap);
+  }
+
+  .m-ch__grid :global(.m-ch__head) {
+    grid-column: 1 / span 7;
+    margin-bottom: 0;
+  }
+
+  .m-ch__body {
+    grid-column: 8 / -1;
+    align-self: end;
+  }
+
+  .m-ch__points {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: clamp(24px, 4vw, 56px);
+    border-top: var(--hairline) solid var(--line-strong);
+  }
+
+  .m-ch__points li {
+    display: grid;
+    gap: 10px;
+    padding: 24px 24px 0 0;
+  }
+
+  .m-ch__points li + li {
+    padding-left: 24px;
+    border-left: var(--hairline) solid var(--line);
+  }
+
+  .m-ch__points .label {
+    color: var(--accent);
+  }
+
+  .m-ch__band {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    padding: 20px 24px;
+    background: var(--mark-ink);
+    color: var(--mark-mist);
+    border-radius: 3px;
+  }
+
+  .m-ch__band span {
+    display: inline-flex;
+    gap: 24px;
+  }
+
+  .m-ch__band i {
+    font-style: normal;
+    color: var(--mark-signal);
+  }
+
+  .m-eng__status {
+    margin-top: clamp(48px, 6vw, 88px);
+  }
+
+  @media (max-width: 1023px) {
+    .m-ch__grid :global(.m-ch__head),
+    .m-ch__body {
+      grid-column: 1 / -1;
+    }
+
+    .m-ch__points {
+      grid-template-columns: 1fr;
+    }
+
+    .m-ch__points li + li {
+      padding-left: 0;
+      border-left: 0;
+      border-top: var(--hairline) solid var(--line);
+    }
+  }
+</style>

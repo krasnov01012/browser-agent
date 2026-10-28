@@ -66,7 +66,7 @@ function buildEnvironment(renderer: WebGLRenderer): Texture {
     env.add(m);
   };
   const white = new Color('#fffdf8');
-  panel(16, 9, white, 4.2, [-5, 8, 9]); //      ключевой софтбокс сверху слева
+  panel(16, 9, white, 3.4, [-5, 8, 9]); //      ключевой софтбокс сверху слева
   panel(14, 6, white, 1.6, [6, 3, 11]); //      фронтальная заливка справа
   panel(2, 18, white, 5, [10, 0, 1]); //        вертикальная контровая полоса справа
   panel(18, 4, white, 0.9, [0, -9, 5]); //      мягкий нижний рефлекс
@@ -179,7 +179,7 @@ export class KScene {
     this.renderer.setClearColor(0x000000, 0);
 
     this.scene.environment = buildEnvironment(this.renderer);
-    this.scene.environmentRotation.set(0, -0.7, 0);
+    this.scene.environmentRotation.set(0, -0.5, 0);
 
     const key = new DirectionalLight(0xffffff, 1.6);
     key.position.set(-3, 5, 6);
@@ -367,7 +367,8 @@ export class KScene {
 
     // Блик по металлу и выход во фронтальный ракурс
     const settle = ease.inOutCubic(range(t, 0.4, 6.6));
-    this.scene.environmentRotation.y = lerp(-0.85, 0.1, ease.inOutCubic(range(t, 3.6, 7)));
+    // Блик проходит по металлу, но без пересвета: диапазон поворота окружения ограничен.
+    this.scene.environmentRotation.y = lerp(-0.5, 0.1, ease.inOutCubic(range(t, 3.6, 7)));
     this.model.rotation.set(lerp(0.1, 0, settle), lerp(-0.42, 0, settle), 0);
     this.model.position.z = lerp(-0.6, 0, settle);
   }

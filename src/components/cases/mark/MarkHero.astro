@@ -1,0 +1,174 @@
+---
+import Arrow from '@/components/ui/Arrow.astro';
+import Crumb from '@/components/cases/Crumb.astro';
+import MarkVisual from '@/components/cases/MarkVisual.astro';
+import { mark } from '@/content/mark';
+import { localizePath, t, type Locale } from '@/i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const c = mark[locale];
+const w = t(locale).work.mark;
+---
+
+<section class="m-hero theme-mark" data-scene="hero" aria-labelledby="m-hero-title">
+  <div class="m-hero__rails" aria-hidden="true">
+    {Array.from({ length: 5 }, (_, i) => <span style={`--i:${i}`} />)}
+  </div>
+  <div class="shell m-hero__grid">
+    <div class="m-hero__text">
+      <Crumb locale={locale} parts={c.crumb} />
+      <p class="label label--accent" data-reveal>{c.hero.kicker}</p>
+      <h1 class="m-hero__title" id="m-hero-title" data-lines>
+        <span class="line-mask"><span>{c.hero.title}<span class="dot">.</span></span></span>
+      </h1>
+      <p class="m-hero__claim" data-reveal data-status="draft">{c.hero.claim}</p>
+      <p class="lead" data-reveal>{c.hero.deck}</p>
+      <div class="m-hero__actions" data-reveal>
+        <a class="btn btn--primary" href="#pipeline">
+          <span>{c.hero.cta1}</span>
+          <Arrow dir="down" />
+        </a>
+        <a class="btn btn--ghost" href={`${localizePath('/', locale)}?source=mark_case&intent=similar_project&label=Mark#contact`}>
+          <span>{c.hero.cta2}</span>
+          <Arrow />
+        </a>
+      </div>
+    </div>
+    <div class="m-hero__media" data-reveal>
+      <MarkVisual stages={w.stages} provenance={w.provenance} />
+    </div>
+  </div>
+  <div class="shell">
+    <ul class="m-hero__band label">
+      {c.hero.band.map((b, i) => <li><b>{String(i + 1).padStart(2, '0')}</b>{b}</li>)}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .m-hero {
+    position: relative;
+    padding-top: calc(var(--header-h) + clamp(40px, 6vw, 88px));
+    overflow: hidden;
+  }
+
+  /* Тонкие «рельсы» данных во всю ширину */
+  .m-hero__rails {
+    position: absolute;
+    inset: 18% 0 auto;
+    height: 46%;
+    display: grid;
+    align-content: space-between;
+    pointer-events: none;
+  }
+
+  .m-hero__rails span {
+    height: 1px;
+    background: rgb(121 220 228 / 0.08);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .m-hero__rails span::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 120px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--mark-signal));
+    opacity: 0;
+  }
+
+  :global(.motion) .m-hero__rails span::after {
+    animation: m-rail 900ms var(--ease-mech) both;
+    animation-delay: calc(300ms + var(--i) * 90ms);
+  }
+
+  @keyframes m-rail {
+    from {
+      transform: translateX(-120px);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(100vw);
+      opacity: 1;
+    }
+  }
+
+  .m-hero__grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 48px var(--col-gap);
+    align-items: center;
+    padding-bottom: clamp(48px, 6vw, 96px);
+  }
+
+  .m-hero__text {
+    grid-column: 1 / span 5;
+    display: grid;
+    gap: 22px;
+    container-type: inline-size;
+  }
+
+  .m-hero__title {
+    margin-top: 8px;
+    font-size: min(27cqi, 12rem);
+    font-weight: 660;
+    line-height: 0.8;
+    letter-spacing: -0.06em;
+    text-transform: uppercase;
+  }
+
+  .m-hero__claim {
+    font-size: var(--fs-h3);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    color: var(--mark-signal);
+  }
+
+  .m-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .m-hero__media {
+    grid-column: 6 / -1;
+  }
+
+  .m-hero__band {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-top: var(--hairline) solid var(--line);
+  }
+
+  .m-hero__band li {
+    display: flex;
+    gap: 12px;
+    padding: 20px 0;
+  }
+
+  .m-hero__band b {
+    font-weight: 500;
+    color: var(--mark-signal);
+  }
+
+  @media (max-width: 1023px) {
+    .m-hero__text,
+    .m-hero__media {
+      grid-column: 1 / -1;
+    }
+
+    .m-hero__band {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

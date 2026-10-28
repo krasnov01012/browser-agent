@@ -1,0 +1,155 @@
+---
+/** 04 «Правила перед AI» (Mark Mist): два инженерных блока + переключатель продукт/инженерия. */
+import CaseHead from '@/components/cases/CaseHead.astro';
+import { mark } from '@/content/mark';
+import type { Locale } from '@/i18n';
+
+interface Props {
+  locale: Locale;
+}
+const c = mark[Astro.props.locale].decision;
+const views = [
+  { id: 'product', label: c.views.product, text: c.product },
+  { id: 'engineering', label: c.views.engineering, text: c.engineering },
+];
+---
+
+<section class="m-dec section theme-mist" data-scene="decision" aria-labelledby="m-dec-title">
+  <div class="shell" data-tabs>
+    <div class="m-dec__head">
+      <CaseHead index={c.index} lines={c.titleLines} id="m-dec-title" />
+      <p class="lead" data-reveal>{c.deck}</p>
+    </div>
+
+    <div class="m-dec__panels" data-reveal-group>
+      {
+        c.panels.map((p, i) => (
+          <article class:list={['m-dec__panel', i === 1 && 'm-dec__panel--ai']} data-reveal>
+            <p class="label label--accent">{p.tag}</p>
+            <h3 class="h3">{p.title}</h3>
+            <p class="body">{p.text}</p>
+            <code class="m-dec__rule">{p.rule}</code>
+          </article>
+        ))
+      }
+      <span class="m-dec__join" aria-hidden="true">→</span>
+    </div>
+
+    <div class="m-dec__switch" role="tablist" aria-label={c.index}>
+      {
+        views.map((v, i) => (
+          <button type="button" role="tab" id={`m-dec-tab-${v.id}`} aria-controls={`m-dec-${v.id}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1}>
+            {v.label}
+          </button>
+        ))
+      }
+    </div>
+    {
+      views.map((v, i) => (
+        <p class="m-dec__view" role="tabpanel" id={`m-dec-${v.id}`} aria-labelledby={`m-dec-tab-${v.id}`} tabindex="0" data-tab-hidden={i !== 0 ? '' : undefined}>
+          {v.text}
+        </p>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .m-dec__head {
+    display: grid;
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+    gap: 24px var(--col-gap);
+    align-items: end;
+    margin-bottom: clamp(48px, 6vw, 88px);
+  }
+
+  .m-dec__head :global(.chead) {
+    margin-bottom: 0;
+  }
+
+  .m-dec__panels {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--col-gap);
+    margin-bottom: clamp(40px, 5vw, 64px);
+  }
+
+  .m-dec__panel {
+    display: grid;
+    align-content: start;
+    gap: 16px;
+    padding: clamp(24px, 3vw, 44px);
+    background: #f6fafa;
+    border: var(--hairline) solid var(--line);
+    border-top: 2px solid var(--mark-ink);
+    border-radius: 3px;
+  }
+
+  .m-dec__panel--ai {
+    border-top-color: #17707a;
+  }
+
+  .m-dec__rule {
+    margin-top: 12px;
+    padding-top: 16px;
+    border-top: var(--hairline) solid var(--line);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+  }
+
+  .m-dec__join {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 36px;
+    height: 36px;
+    margin: -18px 0 0 -18px;
+    display: grid;
+    place-items: center;
+    color: var(--mark-mist);
+    background: var(--mark-ink);
+    border-radius: 50%;
+  }
+
+  .m-dec__switch {
+    display: inline-flex;
+    margin-bottom: 20px;
+    border: var(--hairline) solid var(--line-strong);
+    border-radius: 2px;
+  }
+
+  .m-dec__switch button {
+    min-height: 46px;
+    padding: 0 20px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+  }
+
+  .m-dec__switch button[aria-selected='true'] {
+    color: var(--mark-mist);
+    background: var(--mark-ink);
+  }
+
+  .m-dec__view {
+    max-width: 52em;
+    font-size: var(--fs-lead);
+    line-height: 1.5;
+  }
+
+  @media (max-width: 1023px) {
+    .m-dec__head,
+    .m-dec__panels {
+      grid-template-columns: 1fr;
+    }
+
+    .m-dec__join {
+      display: none;
+    }
+  }
+</style>

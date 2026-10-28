@@ -9,7 +9,7 @@
  * Результаты — в qa/ (не коммитится).
  */
 import { createRequire } from 'node:module';
-import { spawn } from 'node:child_process';
+import { serveDist } from './serve-dist.mjs';
 import { mkdirSync } from 'node:fs';
 
 const require = createRequire(import.meta.url);
@@ -23,8 +23,7 @@ const reduced = process.env.QA_REDUCED === '1';
 const port = 4399;
 
 mkdirSync('qa', { recursive: true });
-const server = spawn('npx', ['astro', 'preview', '--port', String(port)], { stdio: 'ignore' });
-await new Promise((r) => setTimeout(r, 2500));
+const server = await serveDist(port);
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const report = [];
@@ -63,6 +62,6 @@ try {
   }
 } finally {
   await browser.close();
-  server.kill();
+  server.close();
 }
 console.table(report.map((r) => ({ ...r, errors: r.errors.join(' | ').slice(0, 120) })));

@@ -35,7 +35,7 @@ const geo = describe();
 
     <div class="k-stage" data-k-stage data-state="pending" data-status="proposed">
       <KBlueprint beamAngle={geo.beamAngle} stemWidth={geo.stemWidth} height={geo.height} />
-      <img class="k-stage__poster" src="/media/k/architectural-k.svg" alt="" width="1000" height="1000" decoding="async" />
+      <img class="k-stage__poster" src="/media/k/k-render.webp" alt="" width="1000" height="1000" decoding="async" />
       <canvas class="k-stage__canvas" role="img" aria-label={dict.hero.kAlt}></canvas>
       <div class="k-stage__hud label" aria-hidden="true">
         <span class="k-stage__hud-model">{dict.hero.hud.model}</span>
@@ -281,6 +281,24 @@ const geo = describe();
   @media (max-width: 767px) {
     .hero {
       min-height: auto;
+    }
+
+    /* Первый экран телефона: знак + заголовок + CTA помещаются целиком. */
+    .k-stage {
+      width: min(100%, 37svh, 420px);
+      margin-bottom: 30px;
+    }
+
+    .hero__eyebrow {
+      margin-bottom: 16px;
+    }
+
+    .hero__lead {
+      margin-top: 18px;
+    }
+
+    .hero__actions {
+      margin-top: 24px;
     }
 
     .hero__caps {

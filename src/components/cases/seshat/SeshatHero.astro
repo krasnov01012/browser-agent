@@ -1,0 +1,134 @@
+---
+import Arrow from '@/components/ui/Arrow.astro';
+import Crumb from '@/components/cases/Crumb.astro';
+import SeshatVisual from '@/components/cases/SeshatVisual.astro';
+import { seshat } from '@/content/seshat';
+import { localizePath, t, type Locale } from '@/i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const c = seshat[locale];
+const media = t(locale).work.seshat;
+---
+
+<section class="s-hero theme-seshat" data-scene="hero" aria-labelledby="s-hero-title">
+  <div class="shell s-hero__grid">
+    <div class="s-hero__text">
+      <Crumb locale={locale} parts={c.crumb} />
+      <p class="label label--accent s-hero__kicker" data-reveal>{c.hero.kicker}</p>
+      <h1 class="s-hero__title" id="s-hero-title" data-lines>
+        <span class="line-mask"><span>{c.hero.title}<span class="dot">.</span></span></span>
+      </h1>
+      <p class="s-hero__claim" data-reveal data-status="draft">{c.hero.claim}</p>
+      <p class="lead" data-reveal>{c.hero.deck}</p>
+      <div class="s-hero__actions" data-reveal>
+        <a class="btn btn--primary" href="#experience">
+          <span>{c.hero.cta1}</span>
+          <Arrow dir="down" />
+        </a>
+        <a class="btn btn--ghost" href={`${localizePath('/', locale)}?source=seshat_case&intent=similar_project&label=Seshat#contact`}>
+          <span>{c.hero.cta2}</span>
+          <Arrow />
+        </a>
+      </div>
+    </div>
+    <div class="s-hero__media" data-reveal>
+      <SeshatVisual days={media.media.days} message={media.media.message} parsed={media.media.parsed} confirm={media.media.confirm} provenance={media.provenance} />
+    </div>
+  </div>
+  <div class="shell">
+    <ul class="s-hero__meta label" data-status="verify">
+      {c.hero.meta.map((m) => <li>{m}</li>)}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .s-hero {
+    position: relative;
+    padding-top: calc(var(--header-h) + clamp(40px, 6vw, 88px));
+    overflow: hidden;
+  }
+
+  /* Разреженная временная сетка: часы по горизонтали, редкие сигнальные метки */
+  .s-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(90deg, rgb(229 107 119 / 0.08) 0 1px, transparent 1px calc(100% / 24)),
+      repeating-linear-gradient(180deg, rgb(229 107 119 / 0.05) 0 1px, transparent 1px 96px);
+    mask-image: radial-gradient(80% 70% at 70% 40%, #000, transparent 85%);
+    pointer-events: none;
+  }
+
+  .s-hero__grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 48px var(--col-gap);
+    align-items: center;
+    padding-bottom: clamp(48px, 6vw, 96px);
+  }
+
+  .s-hero__text {
+    grid-column: 1 / span 6;
+    display: grid;
+    gap: 22px;
+    container-type: inline-size;
+  }
+
+  .s-hero__kicker {
+    margin-top: 12px;
+  }
+
+  .s-hero__title {
+    font-size: min(22cqi, 13rem);
+    font-weight: 660;
+    line-height: 0.8;
+    letter-spacing: -0.06em;
+    text-transform: uppercase;
+  }
+
+  .s-hero__claim {
+    font-size: var(--fs-h3);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--seshat-signal);
+  }
+
+  .s-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .s-hero__media {
+    grid-column: 7 / -1;
+  }
+
+  .s-hero__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 32px;
+    padding-block: 22px;
+    border-top: var(--hairline) solid var(--line);
+  }
+
+  .s-hero__meta li::before {
+    content: '◇ ';
+    color: var(--seshat-signal);
+  }
+
+  @media (max-width: 1023px) {
+    .s-hero__text,
+    .s-hero__media {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

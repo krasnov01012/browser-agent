@@ -1,0 +1,127 @@
+---
+/**
+ * Редакционные нумерованные строки с раскрываемой технической деталью.
+ * <details> работает без JS и доступен с клавиатуры из коробки.
+ */
+interface Row {
+  title: string;
+  summary: string;
+  detail: string;
+}
+interface Props {
+  rows: Row[];
+  status?: string;
+}
+const { rows, status } = Astro.props;
+---
+
+<ol class="rows" data-reveal-group data-status={status}>
+  {
+    rows.map((r, i) => (
+      <li class="rows__item" data-reveal>
+        <details class="rows__details">
+          <summary class="rows__summary">
+            <span class="label rows__index">{String(i + 1).padStart(2, '0')}</span>
+            <span class="rows__title">{r.title}</span>
+            <span class="rows__text">{r.summary}</span>
+            <span class="rows__toggle" aria-hidden="true" />
+          </summary>
+          <p class="rows__detail">{r.detail}</p>
+        </details>
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  .rows {
+    border-top: var(--hairline) solid var(--line-strong);
+  }
+
+  .rows__item {
+    border-bottom: var(--hairline) solid var(--line-strong);
+  }
+
+  .rows__summary {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 5fr) minmax(0, 6fr) 24px;
+    align-items: baseline;
+    gap: 16px var(--col-gap);
+    padding-block: clamp(24px, 3vw, 40px);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .rows__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .rows__index {
+    color: var(--accent);
+  }
+
+  .rows__title {
+    font-size: clamp(1.375rem, 1rem + 1.4vw, 2.25rem);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    text-transform: uppercase;
+  }
+
+  .rows__text {
+    color: var(--fg-muted);
+  }
+
+  .rows__toggle {
+    position: relative;
+    width: 16px;
+    height: 16px;
+    align-self: center;
+  }
+
+  .rows__toggle::before,
+  .rows__toggle::after {
+    content: '';
+    position: absolute;
+    inset: 50% 0 auto;
+    height: 1.5px;
+    background: currentColor;
+    transition: transform var(--dur-m) var(--ease-out);
+  }
+
+  .rows__toggle::after {
+    transform: rotate(90deg);
+  }
+
+  .rows__details[open] .rows__toggle::after {
+    transform: rotate(0deg);
+  }
+
+  .rows__summary:hover .rows__title {
+    color: var(--accent);
+  }
+
+  .rows__detail {
+    margin: -8px 0 0 calc(64px + var(--col-gap));
+    padding: 0 0 clamp(24px, 3vw, 40px);
+    max-width: 52em;
+    color: var(--fg-muted);
+    border-left: 2px solid var(--signal);
+    padding-left: 20px;
+  }
+
+  @media (max-width: 767px) {
+    .rows__summary {
+      grid-template-columns: 40px minmax(0, 1fr) 20px;
+    }
+
+    .rows__text {
+      grid-column: 2 / 3;
+      font-size: 0.9375rem;
+    }
+
+    .rows__detail {
+      margin-left: 40px;
+    }
+  }
+</style>

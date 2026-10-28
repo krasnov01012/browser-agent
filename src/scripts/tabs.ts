@@ -12,7 +12,11 @@ export function initTabs(): void {
         t.setAttribute('aria-selected', String(on));
         t.tabIndex = on ? 0 : -1;
         const panel = document.getElementById(t.getAttribute('aria-controls') ?? '');
-        if (panel) panel.hidden = !on;
+        if (panel) {
+          panel.hidden = !on;
+          // data-tab-hidden скрывает лишние панели до инициализации (без JS видны все).
+          panel.removeAttribute('data-tab-hidden');
+        }
       }
       if (focus) tab.focus();
       root.dispatchEvent(new CustomEvent('tabchange', { detail: tab.dataset.tab }));
@@ -28,6 +32,9 @@ export function initTabs(): void {
         if (next) select(next, true);
       });
     });
+
+    const initial = tabs.find((t) => t.getAttribute('aria-selected') === 'true') ?? tabs[0];
+    if (initial) select(initial);
 
     const byHash = (hash: string): void => {
       const tab = tabs.find((t) => t.dataset.hash && `#${t.dataset.hash}` === hash);

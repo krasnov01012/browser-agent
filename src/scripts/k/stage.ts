@@ -58,7 +58,8 @@ export async function initKStage(): Promise<void> {
       },
       onState: ({ assembly, tiltX, tiltY }) => {
         const now = performance.now();
-        if (now - lastHud < 60) return;
+        // Финальное значение (100%) показываем всегда, остальное — не чаще ~16 раз/с.
+        if (now - lastHud < 60 && assembly < 1) return;
         lastHud = now;
         if (hud.assembly) hud.assembly.textContent = `${String(Math.round(assembly * 100)).padStart(3, '0')}%`;
         if (hud.tilt) hud.tilt.textContent = `${fmt(tiltX)}° ${fmt(tiltY)}°`;

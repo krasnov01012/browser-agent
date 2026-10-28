@@ -1,0 +1,72 @@
+---
+/**
+ * Кейс Seshat v1.2 — 7 сцен. Арт-направление Deep Wine / Time Signal утверждено;
+ * тексты, медиа и факты — черновики, поэтому страница закрыта от индексации.
+ */
+import Base from '@/layouts/Base.astro';
+import SeshatHero from '@/components/cases/seshat/SeshatHero.astro';
+import SeshatChallenge from '@/components/cases/seshat/SeshatChallenge.astro';
+import SeshatExperience from '@/components/cases/seshat/SeshatExperience.astro';
+import SeshatArchitecture from '@/components/cases/seshat/SeshatArchitecture.astro';
+import CaseHead from '@/components/cases/CaseHead.astro';
+import CaseRows from '@/components/cases/CaseRows.astro';
+import StatusColumns from '@/components/cases/StatusColumns.astro';
+import CaseNext from '@/components/cases/CaseNext.astro';
+import { seshat } from '@/content/seshat';
+import { locales, localizePath, type Locale } from '@/i18n';
+
+export function getStaticPaths() {
+  return locales.map((lang) => ({ params: { lang } }));
+}
+
+const locale = Astro.params.lang as Locale;
+const c = seshat[locale];
+---
+
+<Base locale={locale} path="/work/seshat/" title={c.meta.title} description={c.meta.description} noindex>
+  <SeshatHero locale={locale} />
+  <SeshatChallenge locale={locale} />
+  <SeshatExperience locale={locale} />
+  <SeshatArchitecture locale={locale} />
+
+  <section class="section theme-light case-eng" data-scene="engineering" aria-labelledby="s-eng-title">
+    <div class="shell">
+      <CaseHead index={c.engineering.index} lines={c.engineering.titleLines} id="s-eng-title" />
+      <CaseRows rows={c.engineering.rows} status="verify" />
+    </div>
+  </section>
+
+  <section class="section theme-light case-outcome" data-scene="outcome" aria-labelledby="s-out-title">
+    <div class="shell">
+      <CaseHead index={c.outcome.index} lines={c.outcome.titleLines} lead={c.outcome.lead} id="s-out-title" />
+      <StatusColumns columns={[c.outcome.available, c.outcome.progress]} />
+    </div>
+  </section>
+
+  <CaseNext
+    locale={locale}
+    label={c.next.label}
+    name={c.next.name}
+    teaser={c.next.teaser}
+    href={localizePath('/work/mark/', locale)}
+    ctaTitle={c.next.ctaTitle}
+    ctaText={c.next.ctaText}
+    cta={c.next.cta}
+    source="seshat_case"
+    current="Seshat"
+    accent="var(--mark-signal)"
+  />
+</Base>
+
+<style>
+  .case-eng {
+    --signal: var(--seshat-signal);
+    --accent: #b8394a;
+  }
+
+  .case-outcome {
+    --signal: var(--seshat-signal);
+    --accent: #b8394a;
+    padding-top: 0;
+  }
+</style>

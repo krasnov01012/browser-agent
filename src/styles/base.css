@@ -33,6 +33,11 @@ body {
   display: none !important;
 }
 
+/* Неактивные вкладки скрыты сразу (класс .js ставится до отрисовки); без JS видно всё. */
+.js [data-tab-hidden] {
+  display: none !important;
+}
+
 img,
 svg,
 video,
@@ -156,7 +161,7 @@ ol {
   --fg-faint: #3f5866;
   --line: rgb(16 25 35 / 0.14);
   --line-strong: rgb(16 25 35 / 0.3);
-  --accent: #1d7c86;
+  --accent: #17707a;
   --signal: var(--mark-signal);
   color-scheme: light;
 }

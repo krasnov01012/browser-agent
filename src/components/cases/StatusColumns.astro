@@ -1,0 +1,101 @@
+---
+/** Честный статус продукта: что работает, что в разработке, что не заявляется. */
+interface Column {
+  title: string;
+  items: string[];
+}
+interface Props {
+  columns: Column[];
+}
+const { columns } = Astro.props;
+const tones = ['on', 'progress', 'off'];
+---
+
+<div class="status" style={`--cols:${columns.length}`} data-reveal-group data-status="verify">
+  {
+    columns.map((c, i) => (
+      <section class={`status__col status__col--${tones[i]}`} data-reveal>
+        <h3 class="status__title">
+          <span class="status__dot" aria-hidden="true" />
+          {c.title}
+        </h3>
+        <ul>
+          {c.items.map((item) => (
+            <li>{item}</li>
+          ))}
+        </ul>
+      </section>
+    ))
+  }
+</div>
+
+<style>
+  .status {
+    display: grid;
+    grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+    gap: var(--col-gap);
+  }
+
+  .status__col {
+    padding: clamp(24px, 2.6vw, 40px);
+    background: var(--bg-raised);
+    border-top: 2px solid var(--fg);
+    border-radius: var(--radius);
+  }
+
+  .status__col--progress {
+    border-top-style: dashed;
+  }
+
+  .status__col--off {
+    border-top-color: var(--line-strong);
+    background: transparent;
+    outline: var(--hairline) solid var(--line);
+    outline-offset: -1px;
+  }
+
+  .status__title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .status__dot {
+    width: 9px;
+    height: 9px;
+    flex: none;
+    background: var(--signal);
+  }
+
+  .status__col--progress .status__dot {
+    background: transparent;
+    border: 1.5px solid var(--signal);
+  }
+
+  .status__col--off .status__dot {
+    background: transparent;
+    border: 1.5px solid var(--line-strong);
+    transform: rotate(45deg);
+  }
+
+  .status__col li {
+    padding-block: 10px;
+    border-top: var(--hairline) solid var(--line);
+    color: var(--fg-muted);
+  }
+
+  .status__col--off li {
+    text-decoration: line-through;
+    text-decoration-color: var(--line-strong);
+  }
+
+  @media (max-width: 1023px) {
+    .status {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

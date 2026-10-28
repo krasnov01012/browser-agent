@@ -1,0 +1,30 @@
+---
+/** Заголовок сцены кейса: индекс + построчный заголовок + опциональный лид. */
+import Lines from '@/components/ui/Lines.astro';
+interface Props {
+  index: string;
+  lines: string[];
+  lead?: string;
+  id: string;
+  class?: string;
+}
+const { index, lines, lead, id, class: className } = Astro.props;
+---
+
+<header class:list={['chead', className]}>
+  <p class="label label--accent" data-reveal>{index}</p>
+  <Lines id={id} class="h2 chead__title" lines={lines} status="draft" />
+  {lead && <p class="lead chead__lead" data-reveal>{lead}</p>}
+</header>
+
+<style>
+  .chead {
+    display: grid;
+    gap: 24px;
+    margin-bottom: clamp(48px, 6vw, 96px);
+  }
+
+  .chead__lead {
+    max-width: 34em;
+  }
+</style>

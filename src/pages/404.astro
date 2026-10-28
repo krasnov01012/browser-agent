@@ -1,0 +1,52 @@
+---
+import Base from '@/layouts/Base.astro';
+import KMark from '@/components/ui/KMark.astro';
+import Arrow from '@/components/ui/Arrow.astro';
+import { defaultLocale, t } from '@/i18n';
+
+// Статический 404 один на сайт — показываем оба языка.
+const ru = t('ru').notFound;
+const en = t('en').notFound;
+---
+
+<Base locale={defaultLocale} path="/" title="404 — Krasnoff Development" noindex>
+  <section class="nf section theme-dark">
+    <div class="shell nf__inner">
+      <KMark class="nf__mark" />
+      <p class="label label--accent">Error 404</p>
+      <h1 class="h2">{ru.title}<span class="dot">.</span></h1>
+      <p class="lead">{ru.text}</p>
+      <p class="lead" lang="en">{en.title}. {en.text}</p>
+      <div class="nf__actions">
+        <a class="btn btn--primary" href="/ru/"><span>{ru.back}</span><Arrow dir="e" /></a>
+        <a class="btn btn--ghost" href="/en/" lang="en"><span>{en.back}</span><Arrow dir="e" /></a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .nf {
+    min-height: 100svh;
+    display: grid;
+    align-items: center;
+  }
+
+  .nf__inner {
+    display: grid;
+    gap: 24px;
+    justify-items: start;
+  }
+
+  .nf__inner :global(.nf__mark) {
+    height: 120px;
+    width: auto;
+    color: var(--ivory);
+  }
+
+  .nf__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+</style>

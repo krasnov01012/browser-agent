@@ -1,0 +1,29 @@
+---
+import { localizePath, type Locale } from '@/i18n';
+interface Props {
+  locale: Locale;
+  parts: string[];
+}
+const { locale, parts } = Astro.props;
+---
+
+<nav class="crumb label" aria-label="Breadcrumb">
+  <a href={`${localizePath('/', locale)}#work`}>{parts[0]}</a>
+  <span aria-hidden="true">/</span>
+  <span aria-current="page">{parts[1]}</span>
+</nav>
+
+<style>
+  .crumb {
+    display: flex;
+    gap: 10px;
+  }
+
+  .crumb a:hover {
+    color: var(--accent);
+  }
+
+  .crumb [aria-current] {
+    color: var(--fg);
+  }
+</style>

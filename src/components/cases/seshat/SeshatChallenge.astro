@@ -1,0 +1,109 @@
+---
+import CaseHead from '@/components/cases/CaseHead.astro';
+import { seshat } from '@/content/seshat';
+import type { Locale } from '@/i18n';
+
+interface Props {
+  locale: Locale;
+}
+const c = seshat[Astro.props.locale].challenge;
+---
+
+<section class="s-ch section theme-light" data-scene="challenge" aria-labelledby="s-ch-title">
+  <div class="shell s-ch__grid">
+    <CaseHead class="s-ch__head" index={c.index} lines={c.titleLines} id="s-ch-title" />
+    <div class="s-ch__body">
+      <p class="lead" data-reveal>{c.body}</p>
+      <div class="s-ch__split" data-reveal-group>
+        {
+          c.split.map((s, i) => (
+            <div class:list={['s-ch__half', i === 1 && 's-ch__half--exec']} data-reveal>
+              <p class="label label--accent">{s.tag}</p>
+              <h3 class="h4">{s.title}</h3>
+              <p class="body">{s.text}</p>
+            </div>
+          ))
+        }
+        <span class="s-ch__arrow" aria-hidden="true">→</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .s-ch__grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 40px var(--col-gap);
+  }
+
+  .s-ch__grid :global(.s-ch__head) {
+    grid-column: 1 / span 6;
+    margin-bottom: 0;
+  }
+
+  .s-ch__body {
+    grid-column: 8 / -1;
+    display: grid;
+    gap: 48px;
+    align-content: end;
+  }
+
+  .s-ch__split {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 2px solid var(--seshat-signal);
+  }
+
+  .s-ch__half {
+    display: grid;
+    gap: 10px;
+    padding: 24px 24px 0 0;
+  }
+
+  .s-ch__half--exec {
+    padding-left: 24px;
+    border-left: var(--hairline) solid var(--line-strong);
+  }
+
+  .s-ch__arrow {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    width: 28px;
+    height: 28px;
+    margin-left: -14px;
+    display: grid;
+    place-items: center;
+    font-size: 0.875rem;
+    background: var(--ivory);
+    color: var(--coral-strong);
+    border: var(--hairline) solid var(--seshat-signal);
+    border-radius: 50%;
+  }
+
+  @media (max-width: 1023px) {
+    .s-ch__grid :global(.s-ch__head),
+    .s-ch__body {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 559px) {
+    .s-ch__split {
+      grid-template-columns: 1fr;
+    }
+
+    .s-ch__half--exec {
+      padding-left: 0;
+      border-left: 0;
+      margin-top: 24px;
+      border-top: var(--hairline) solid var(--line-strong);
+    }
+
+    .s-ch__arrow {
+      display: none;
+    }
+  }
+</style>

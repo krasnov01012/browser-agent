@@ -1,0 +1,195 @@
+---
+/** Абстрактная схема этапа конвейера MARK (синтетика, без значений и оценок). */
+interface Props {
+  kind: string;
+}
+const { kind } = Astro.props;
+const rows = [62, 40, 78, 52, 30, 70, 46];
+---
+
+<svg class={`msv msv--${kind}`} viewBox="0 0 480 260" aria-hidden="true" fill="none">
+  {
+    kind === 'sources' && (
+      <g>
+        <rect x="20" y="40" width="110" height="52" rx="3" class="msv-box" />
+        <text x="75" y="71" text-anchor="middle">HH API</text>
+        <rect x="20" y="168" width="110" height="52" rx="3" class="msv-box" />
+        <text x="75" y="199" text-anchor="middle">HABR RSS</text>
+        {rows.map((w, i) => (
+          <rect class="msv-row" x="170" y={34 + i * 30} width={w * 3} height="10" rx="1" style={`--i:${i}`} />
+        ))}
+        <path d="M130 66 C150 66 150 50 170 39 M130 194 C150 194 150 214 170 224" class="msv-wire" />
+      </g>
+    )
+  }
+  {
+    kind === 'normalize' && (
+      <g>
+        {rows.slice(0, 5).map((w, i) => (
+          <rect class="msv-row msv-row--dim" x="20" y={40 + i * 40} width={w * 1.6} height="10" rx="1" />
+        ))}
+        <path d="M170 130 H218 M210 122 L218 130 L210 138" class="msv-wire" />
+        <rect x="240" y="40" width="220" height="180" rx="3" class="msv-box msv-box--signal" />
+        {['ROLE', 'LOCATION', 'WORK MODE', 'DESCRIPTION'].map((f, i) => (
+          <g>
+            <text x="258" y={76 + i * 40}>{f}</text>
+            <rect class="msv-field" x="360" y={66 + i * 40} width={i === 3 ? 82 : 60} height="12" rx="1" />
+          </g>
+        ))}
+      </g>
+    )
+  }
+  {
+    kind === 'rules' && (
+      <g>
+        {[0, 1, 2, 3, 4].map((i) => (
+          <rect class:list={['msv-row', i % 2 === 0 && 'msv-row--pass']} x="20" y={46 + i * 36} width="110" height="10" rx="1" />
+        ))}
+        <path d="M190 24 V236" class="msv-gate" />
+        <text x="190" y="252" text-anchor="middle">IF … THEN</text>
+        {[0, 2, 4].map((i) => (
+          <g>
+            <path d={`M130 ${51 + i * 36} H300`} class="msv-wire msv-wire--signal" />
+            <text x="316" y={55 + i * 36} class="msv-ok">PASS</text>
+          </g>
+        ))}
+        {[1, 3].map((i) => (
+          <g>
+            <path d={`M130 ${51 + i * 36} H190 L210 ${71 + i * 36}`} class="msv-wire msv-wire--dim" />
+            <text x="220" y={79 + i * 36} class="msv-no">SKIP</text>
+          </g>
+        ))}
+      </g>
+    )
+  }
+  {
+    kind === 'match' && (
+      <g>
+        <circle cx="180" cy="130" r="84" class="msv-set" />
+        <circle cx="300" cy="130" r="84" class="msv-set msv-set--signal" />
+        <text x="130" y="134" text-anchor="middle">JOB</text>
+        <text x="350" y="134" text-anchor="middle">PROFILE</text>
+        <path d="M240 72 V188" class="msv-wire msv-wire--signal" stroke-dasharray="3 5" />
+        <text x="240" y="236" text-anchor="middle" class="msv-ok">REVIEW · NOT A SCORE</text>
+        {[[214, 104], [252, 150], [230, 168], [262, 96]].map(([x, y]) => (
+          <circle cx={x} cy={y} r="3.5" class="msv-dot" />
+        ))}
+      </g>
+    )
+  }
+  {
+    kind === 'deliver' && (
+      <g>
+        <path d="M20 130 H150" class="msv-wire msv-wire--signal" />
+        <rect x="170" y="44" width="260" height="172" rx="12" class="msv-box msv-box--signal" />
+        <circle cx="200" cy="76" r="10" class="msv-dot" />
+        <rect x="220" y="70" width="90" height="10" rx="1" class="msv-field" />
+        {[0, 1, 2].map((i) => (
+          <g>
+            <rect x="196" y={104 + i * 34} width="210" height="24" rx="3" class="msv-card" />
+            <rect x="206" y={112 + i * 34} width={[120, 96, 140][i]} height="8" rx="1" class="msv-field" />
+          </g>
+        ))}
+        <text x="300" y="244" text-anchor="middle">TELEGRAM · SYNTHETIC</text>
+      </g>
+    )
+  }
+</svg>
+
+<style>
+  .msv {
+    width: 100%;
+    height: auto;
+  }
+
+  .msv text {
+    fill: #8fb0b8;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+
+  .msv-box {
+    fill: rgb(232 241 241 / 0.03);
+    stroke: rgb(232 241 241 / 0.4);
+    stroke-width: 1.2;
+  }
+
+  .msv-box--signal {
+    fill: rgb(121 220 228 / 0.06);
+    stroke: var(--mark-signal);
+  }
+
+  .msv-row {
+    fill: rgb(232 241 241 / 0.55);
+  }
+
+  .msv-row--dim {
+    fill: rgb(232 241 241 / 0.3);
+  }
+
+  .msv-row--pass {
+    fill: var(--mark-signal);
+  }
+
+  .msv-field {
+    fill: rgb(232 241 241 / 0.28);
+  }
+
+  .msv-card {
+    fill: rgb(232 241 241 / 0.05);
+    stroke: rgb(232 241 241 / 0.18);
+  }
+
+  .msv-wire {
+    stroke: rgb(232 241 241 / 0.4);
+    stroke-width: 1.2;
+  }
+
+  .msv-wire--signal {
+    stroke: var(--mark-signal);
+  }
+
+  .msv-wire--dim {
+    stroke: rgb(232 241 241 / 0.2);
+  }
+
+  .msv-gate {
+    stroke: var(--ivory);
+    stroke-width: 2;
+  }
+
+  .msv .msv-ok {
+    fill: var(--mark-signal);
+  }
+
+  .msv .msv-no {
+    fill: rgb(232 241 241 / 0.35);
+  }
+
+  .msv-set {
+    fill: rgb(232 241 241 / 0.03);
+    stroke: rgb(232 241 241 / 0.4);
+  }
+
+  .msv-set--signal {
+    fill: rgb(121 220 228 / 0.06);
+    stroke: var(--mark-signal);
+  }
+
+  .msv-dot {
+    fill: var(--mark-signal);
+  }
+
+  :global(.motion) .msv-row {
+    animation: msv-in 500ms var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 60ms);
+  }
+
+  @keyframes msv-in {
+    from {
+      opacity: 0;
+      transform: translateX(-16px);
+    }
+  }
+</style>

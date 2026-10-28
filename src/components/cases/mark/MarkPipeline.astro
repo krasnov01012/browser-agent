@@ -1,0 +1,208 @@
+---
+/**
+ * 03 Интерактивный конвейер: 5 этапов — вкладки (клик, тач, стрелки), без автосмены.
+ * Без JS все этапы видны списком; схема каждого этапа подписана как синтетика.
+ */
+import CaseHead from '@/components/cases/CaseHead.astro';
+import MarkStageViz from '@/components/cases/mark/MarkStageViz.astro';
+import { mark } from '@/content/mark';
+import type { Locale } from '@/i18n';
+
+interface Props {
+  locale: Locale;
+}
+const c = mark[Astro.props.locale].pipeline;
+---
+
+<section class="m-pipe section theme-mark" id="pipeline" data-scene="pipeline" aria-labelledby="m-pipe-title">
+  <div class="shell" data-tabs>
+    <div class="m-pipe__head">
+      <CaseHead index={c.index} lines={c.titleLines} id="m-pipe-title" />
+      <p class="lead" data-reveal>{c.lead}</p>
+    </div>
+
+    <div class="m-pipe__stages" role="tablist" aria-label={c.index}>
+      {
+        c.stages.map((s, i) => (
+          <button class="m-pipe__stage" type="button" role="tab" id={`m-stage-${s.id}`} aria-controls={`m-panel-${s.id}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1}>
+            <span class="m-pipe__dot" aria-hidden="true" />
+            <span class="label">{`${c.stageLabel} ${String(i + 1).padStart(2, '0')}`}</span>
+            <span class="m-pipe__name">{s.title}</span>
+          </button>
+        ))
+      }
+    </div>
+
+    {
+      c.stages.map((s, i) => (
+        <div class="m-pipe__panel" role="tabpanel" id={`m-panel-${s.id}`} aria-labelledby={`m-stage-${s.id}`} tabindex="0" data-tab-hidden={i !== 0 ? '' : undefined}>
+          <div class="m-pipe__copy">
+            <p class="label label--accent">
+              {s.code} · {String(i + 1).padStart(2, '0')} / 05
+            </p>
+            <h3 class="h3">{s.title}</h3>
+            <p class="body">{s.text}</p>
+          </div>
+          <figure class="m-pipe__viz" data-status="placeholder">
+            <MarkStageViz kind={s.viz} />
+            <figcaption class="provenance">{c.synthetic}</figcaption>
+          </figure>
+        </div>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .m-pipe__head {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: 24px var(--col-gap);
+    align-items: end;
+    margin-bottom: clamp(40px, 5vw, 72px);
+  }
+
+  .m-pipe__head :global(.chead) {
+    margin-bottom: 0;
+  }
+
+  .m-pipe__stages {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    border-top: var(--hairline) solid var(--mark-border);
+    margin-bottom: clamp(32px, 4vw, 56px);
+  }
+
+  .m-pipe__stage {
+    position: relative;
+    display: grid;
+    gap: 8px;
+    padding: 28px 16px 20px 0;
+    text-align: left;
+    color: var(--fg-muted);
+    transition: color var(--dur-s) var(--ease-out);
+  }
+
+  .m-pipe__stage::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -1px;
+    height: 2px;
+    background: var(--mark-signal);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--dur-m) var(--ease-mech);
+  }
+
+  .m-pipe__stage[aria-selected='true']::after {
+    transform: none;
+  }
+
+  .m-pipe__dot {
+    position: absolute;
+    top: -5px;
+    left: 0;
+    width: 9px;
+    height: 9px;
+    background: var(--mark-ink);
+    border: 1.5px solid var(--mark-border);
+    transition: background-color var(--dur-s) var(--ease-out), border-color var(--dur-s) var(--ease-out);
+  }
+
+  .m-pipe__stage[aria-selected='true'] .m-pipe__dot {
+    background: var(--mark-signal);
+    border-color: var(--mark-signal);
+  }
+
+  .m-pipe__stage:hover,
+  .m-pipe__stage[aria-selected='true'] {
+    color: var(--fg);
+  }
+
+  .m-pipe__name {
+    font-size: clamp(1rem, 0.85rem + 0.6vw, 1.375rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  .m-pipe__panel {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: var(--col-gap);
+    align-items: center;
+  }
+
+  .m-pipe__panel:not([hidden]) {
+    animation: m-panel 260ms var(--ease-out);
+  }
+
+  :global(.no-js) .m-pipe__panel + .m-pipe__panel {
+    margin-top: 48px;
+  }
+
+  @keyframes m-panel {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+
+  .m-pipe__copy {
+    display: grid;
+    gap: 18px;
+  }
+
+  .m-pipe__viz {
+    display: grid;
+    gap: 16px;
+    padding: clamp(20px, 3vw, 40px);
+    background: var(--mark-panel);
+    border: var(--hairline) solid var(--mark-border);
+    border-radius: 4px;
+  }
+
+  .m-pipe__viz .provenance {
+    color: #8fb0b8;
+  }
+
+  @media (max-width: 1023px) {
+    .m-pipe__head,
+    .m-pipe__panel {
+      grid-template-columns: 1fr;
+    }
+
+    .m-pipe__stages {
+      grid-template-columns: 1fr;
+      border-top: 0;
+      border-left: var(--hairline) solid var(--mark-border);
+      margin-left: 4px;
+    }
+
+    .m-pipe__stage {
+      grid-template-columns: auto 1fr;
+      align-items: baseline;
+      gap: 12px;
+      padding: 14px 0 14px 24px;
+    }
+
+    .m-pipe__stage::after {
+      top: 0;
+      bottom: 0;
+      left: -1px;
+      right: auto;
+      width: 2px;
+      height: auto;
+      transform: scaleY(0);
+    }
+
+    .m-pipe__dot {
+      top: 50%;
+      left: -5px;
+      margin-top: -4.5px;
+    }
+  }
+</style>

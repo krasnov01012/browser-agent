@@ -12,6 +12,15 @@ export function initReveal(): void {
     group.querySelectorAll<HTMLElement>('[data-reveal]').forEach((el, i) => el.style.setProperty('--reveal-i', String(i)));
   });
 
+  // Всё, что уже в первом экране, проявляется сразу (каскадом через --reveal-i),
+  // не дожидаясь пересечения с порогом — иначе CTA у нижнего края Hero остался бы скрытым.
+  const firstScreen: HTMLElement[] = [];
+  nodes.forEach((n) => {
+    const r = n.getBoundingClientRect();
+    if (r.top < innerHeight && r.bottom > 0) firstScreen.push(n);
+  });
+  requestAnimationFrame(() => firstScreen.forEach((n) => n.classList.add('is-in')));
+
   const io = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
@@ -22,7 +31,9 @@ export function initReveal(): void {
     },
     { rootMargin: '0px 0px -12% 0px', threshold: 0.01 },
   );
-  nodes.forEach((n) => io.observe(n));
+  nodes.forEach((n) => {
+    if (!firstScreen.includes(n)) io.observe(n);
+  });
 
   // Подстраховка: если вкладка открыта на середине страницы, ничего не должно остаться скрытым.
   addEventListener('load', () => {

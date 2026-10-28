@@ -12,7 +12,8 @@
     "preview": "astro preview",
     "check": "astro check",
     "qa:shots": "node scripts/qa-screenshots.mjs",
-    "qa:poster": "node scripts/render-k-poster.mjs"
+    "qa:interact": "node scripts/qa-interact.mjs",
+    "assets:k": "node scripts/render-k-assets.mjs"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.3.0",

@@ -1,5 +1,5 @@
 ---
-import { localizePath, type Locale } from '@/i18n';
+import { localizePath, t, type Locale } from '@/i18n';
 interface Props {
   locale: Locale;
   parts: string[];
@@ -7,7 +7,7 @@ interface Props {
 const { locale, parts } = Astro.props;
 ---
 
-<nav class="crumb label" aria-label="Breadcrumb">
+<nav class="crumb label" aria-label={t(locale).a11y.breadcrumb}>
   <a href={`${localizePath('/', locale)}#work`}>{parts[0]}</a>
   <span aria-hidden="true">/</span>
   <span aria-current="page">{parts[1]}</span>

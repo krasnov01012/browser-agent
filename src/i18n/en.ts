@@ -16,6 +16,8 @@ export const en: Dict = {
     menuClose: 'Close menu',
     langSwitch: 'Переключить на русский',
     home: 'Krasnoff Development — home',
+    language: 'Language',
+    breadcrumb: 'Breadcrumb',
     newTab: 'opens in a new tab',
   },
   nav: {

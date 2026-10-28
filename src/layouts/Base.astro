@@ -33,6 +33,16 @@ const pageDescription = description ?? dict.meta.description;
 const site = Astro.site ?? new URL('https://krasnoff.example');
 const canonical = new URL(localizePath(path, locale), site).href;
 const ogImage = new URL('/media/og/krasnoff-og.png', site).href;
+// Минимальная разметка организации: только подтверждённые факты (без адреса, телефона, рейтингов).
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Krasnoff Development',
+  url: new URL(localizePath('/', locale), site).href,
+  logo: new URL('/media/k/apple-touch-icon.png', site).href,
+  description: dict.meta.description,
+  knowsLanguage: ['ru', 'en'],
+};
 ---
 
 <!doctype html>
@@ -56,6 +66,7 @@ const ogImage = new URL('/media/og/krasnoff-og.png', site).href;
     <meta property="og:image" content={ogImage} />
     <meta name="twitter:card" content="summary_large_image" />
 
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
     <meta name="theme-color" content="#0B0D11" />
     <meta name="color-scheme" content="dark light" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />

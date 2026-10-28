@@ -16,6 +16,8 @@ export const ru = {
     menuClose: 'Закрыть меню',
     langSwitch: 'Switch to English',
     home: 'Krasnoff Development — на главную',
+    language: 'Язык',
+    breadcrumb: 'Навигационная цепочка',
     newTab: 'откроется в новой вкладке',
   },
   nav: {

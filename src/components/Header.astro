@@ -53,7 +53,7 @@ const menuLinks = [
     </nav>
 
     <div class="site-header__actions">
-      <div class="lang" role="group" aria-label="Language">
+      <div class="lang" role="group" aria-label={dict.a11y.language}>
         <span class="lang__item is-current" aria-current="true">{locale.toUpperCase()}</span>
         <span class="lang__sep" aria-hidden="true">/</span>
         <a class="lang__item" href={localizePath(path, alt)} hreflang={alt} lang={alt} aria-label={dict.a11y.langSwitch} data-lang-switch>

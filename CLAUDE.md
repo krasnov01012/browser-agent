@@ -108,7 +108,7 @@ src/
   pages/           index.astro (выбор языка) · [lang]/index · [lang]/work/{seshat,mark} · [lang]/privacy · 404
 design/k-v02/      рабочие SVG/GLB/geometry.json знака v02 (v01 — устарел, не использовать)
 docs/              brief/ (санитизированный бриф) · DECISIONS.md · OPEN_QUESTIONS.md · STATUS.md
-scripts/           qa-screenshots.mjs — визуальная проверка (Playwright)
+scripts/           qa-screenshots · qa-interact · qa-text-fit · render-k-assets · serve-dist (Playwright, без демонов)
 ```
 
 ## 7. Команды
@@ -119,9 +119,13 @@ npm run dev            # http://localhost:4321/ru/
 npm run build          # статическая сборка в dist/
 npm run preview
 npm run check          # astro check (типы)
-npm run qa:shots       # скриншоты 1440/1280/768/390 + переполнение + ошибки консоли → qa/
+npm run qa             # сборка + qa:fit + qa:interact — обязательный минимум перед коммитом
+npm run qa:fit         # не вылезает ли текст за экран на 320…1440 (длинные русские слова!)
+npm run qa:interact    # 23 проверки интерактива: меню, каталог, формы, бриф, вкладки, no-JS
+npm run qa:shots       # кадры страниц 1440/1280/768/390 + переполнение + ошибки консоли → qa/
 QA_REDUCED=1 npm run qa:shots    # то же с prefers-reduced-motion
 node scripts/qa-screenshots.mjs /en/work/mark/ 390   # одна страница/ширина
+npm run assets:k       # перерендер постера K, OG-картинки и apple-touch-icon из 3D-сцены
 ```
 
 Переменные окружения — `.env.example` (`SITE_URL`, `PUBLIC_LEADS_ENDPOINT`).
@@ -147,8 +151,8 @@ node scripts/qa-screenshots.mjs /en/work/mark/ 390   # одна страница
 
 1. Прочитай `docs/STATUS.md` и `docs/OPEN_QUESTIONS.md` — что сделано и что ждёт решения.
 2. Сделай ограниченный шаг (одна секция / одна страница).
-3. `npm run build && npm run qa:shots` — **посмотри скриншоты** 1440 и 390 (и 768), проверь
-   переполнение = 0 и пустую колонку ошибок. Проверь режим reduced-motion.
+3. `npm run qa` (должно быть зелёным), затем `npm run qa:shots` — **посмотри кадры** 1440 и 390
+   (и 768), проверь переполнение = 0 и пустую колонку ошибок. Проверь режим reduced-motion.
 4. Сравни с критериями: `docs/brief/02_DESIGN_SYSTEM.md` (рубрика 0–5, анти-паттерны).
 5. Обнови `docs/STATUS.md`; новые нерешённые вопросы — в `docs/OPEN_QUESTIONS.md`.
 6. Не объявляй готовым то, что проверено только сборкой: нужен реальный рендер.

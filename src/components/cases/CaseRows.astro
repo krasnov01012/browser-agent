@@ -111,17 +111,32 @@ const { rows, status } = Astro.props;
   }
 
   @media (max-width: 767px) {
+    /* Индекс над заголовком: длинным словам («ДЕТЕРМИНИРОВАННАЯ») достаётся вся ширина */
     .rows__summary {
-      grid-template-columns: 40px minmax(0, 1fr) 20px;
+      grid-template-columns: minmax(0, 1fr) 20px;
+      row-gap: 10px;
+    }
+
+    .rows__index {
+      grid-column: 1 / -1;
+    }
+
+    .rows__title {
+      font-size: min(1.375rem, calc(6.4vw - 2px));
+    }
+
+    .rows__toggle {
+      grid-row: 2;
+      grid-column: 2;
     }
 
     .rows__text {
-      grid-column: 2 / 3;
+      grid-column: 1;
       font-size: 0.9375rem;
     }
 
     .rows__detail {
-      margin-left: 40px;
+      margin-left: 0;
     }
   }
 </style>

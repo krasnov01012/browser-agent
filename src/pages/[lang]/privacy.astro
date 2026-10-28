@@ -32,8 +32,14 @@ const dict = t(locale);
 
   .legal .shell {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 28px;
     max-width: 960px;
     margin-left: 0;
+  }
+
+  /* «КОНФИДЕНЦИАЛЬНОСТИ» — 18 букв: кегль от ширины экрана */
+  .legal .h2 {
+    font-size: clamp(1.375rem, 6.8vw, 5rem);
   }
 </style>

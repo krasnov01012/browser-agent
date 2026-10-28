@@ -12,6 +12,7 @@ const dict = t(locale);
 const home = localizePath('/', locale);
 const alt = otherLocale(locale);
 const year = new Date().getFullYear();
+const build = import.meta.env.BUILD_ID as string | undefined;
 ---
 
 <footer class="site-footer theme-dark">
@@ -64,6 +65,7 @@ const year = new Date().getFullYear();
 
     <div class="site-footer__bottom">
       <p class="label">© {year} {dict.footer.rights}</p>
+      {build && <p class="label site-footer__build">{dict.footer.build} {build} · Astro · Three.js · 0 trackers</p>}
       <a class="label to-top" href="#main" data-to-top>{dict.footer.top} <Arrow dir="ne" /></a>
     </div>
   </div>

@@ -70,6 +70,32 @@ const items = dict.services.items;
 </section>
 
 <style>
+  /* Инженерная линия-мост: коралловый «сигнал» спускается из Hero к подписи секции */
+  .services::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: calc((100% - min(100%, var(--page-max) + 2 * var(--gutter))) / 2 + var(--gutter));
+    width: var(--hairline);
+    height: calc(var(--section-y) - 40px);
+    background: linear-gradient(180deg, var(--coral), rgb(255 101 72 / 0.15));
+    transform-origin: top;
+  }
+
+  @supports (animation-timeline: view()) {
+    :global(.motion) .services::before {
+      animation: svc-bridge linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 70%;
+    }
+
+    @keyframes svc-bridge {
+      from {
+        transform: scaleY(0);
+      }
+    }
+  }
+
   .services__head {
     align-items: end;
     row-gap: 32px;

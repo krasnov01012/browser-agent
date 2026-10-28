@@ -290,8 +290,8 @@ export const ru = {
     legalTitle: 'Правовое',
     privacy: 'Политика конфиденциальности',
     rights: 'Krasnoff Development',
+    build: 'Сборка',
     top: 'Наверх',
-    built: 'Спроектировано и разработано студией',
   },
   privacy: {
     title: 'Политика конфиденциальности',

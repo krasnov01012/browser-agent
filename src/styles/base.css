@@ -96,6 +96,40 @@ ol {
   border-radius: var(--radius);
 }
 
+/* ——— Переходы между страницами: нативные cross-document View Transitions (без JS) ——— */
+
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+
+  .site-header {
+    view-transition-name: site-header;
+  }
+
+  ::view-transition-old(root) {
+    animation: vt-out 260ms var(--ease-in-out) both;
+  }
+
+  ::view-transition-new(root) {
+    animation: vt-in 520ms var(--ease-out) both;
+  }
+}
+
+@keyframes vt-out {
+  to {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
 /* ——— Темы секций: компоненты читают только эти переменные ——— */
 
 :root,
@@ -237,7 +271,8 @@ ol {
 }
 
 .h2 {
-  font-size: var(--fs-h2);
+  /* Самое длинное слово заголовка (≈ 8em: «РАЗРАБАТЫВАЕМ.») всегда помещается в экран телефона */
+  font-size: min(var(--fs-h2), calc(12.5vw - 5px));
   font-weight: 640;
   line-height: 0.94;
   letter-spacing: var(--track-display);
@@ -260,6 +295,7 @@ ol {
 }
 
 .lead {
+  hyphens: auto;
   font-size: var(--fs-lead);
   line-height: 1.45;
   letter-spacing: -0.01em;
@@ -269,6 +305,7 @@ ol {
 }
 
 .body {
+  hyphens: auto;
   color: var(--fg-muted);
   text-wrap: pretty;
   max-width: 40em;
@@ -402,6 +439,14 @@ ol {
 
 .btn:hover .btn__arrow--down {
   transform: translateY(3px);
+}
+
+@media (max-width: 400px) {
+  .btn {
+    white-space: normal;
+    text-align: left;
+    padding-block: 12px;
+  }
 }
 
 /* Текстовая ссылка с проводящейся линией */

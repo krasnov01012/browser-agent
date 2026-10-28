@@ -290,8 +290,8 @@ export const en: Dict = {
     legalTitle: 'Legal',
     privacy: 'Privacy policy',
     rights: 'Krasnoff Development',
+    build: 'Build',
     top: 'Back to top',
-    built: 'Designed and engineered by the studio',
   },
   privacy: {
     title: 'Privacy policy',

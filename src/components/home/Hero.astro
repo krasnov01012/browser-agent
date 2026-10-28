@@ -95,6 +95,7 @@ const geo = describe();
   }
 
   .hero__text {
+    min-width: 0;
     grid-column: 1 / span 7;
     grid-row: 1;
     position: relative;
@@ -223,6 +224,13 @@ const geo = describe();
   }
 
   /* ——— Направления внизу Hero ——— */
+
+  /* Плашка перекрывает линии чертежа: они обрываются на верхней границе ряда */
+  .hero__caps {
+    position: relative;
+    z-index: 2;
+    background: var(--graphite);
+  }
 
   .hero__caps-list {
     display: grid;

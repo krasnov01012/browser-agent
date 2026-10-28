@@ -348,12 +348,14 @@ a.lang__item:hover {
   margin-top: clamp(72px, 10vw, 160px);
   overflow: hidden;
   user-select: none;
+  container-type: inline-size;
 }
 
 .site-footer__word {
   display: block;
   width: 100%;
-  font-size: min(19.4vw, calc(var(--page-max) * 0.194));
+  /* «KRASNOFF» ≈ 5.06em при этом трекинге — слово ровно во всю ширину колонки */
+  font-size: 19.6cqi;
   font-weight: 660;
   line-height: 0.74;
   letter-spacing: -0.045em;
@@ -374,6 +376,17 @@ a.lang__item:hover {
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+}
+
+.site-footer__build {
+  color: rgb(156 160 179 / 0.7);
+}
+
+@media (max-width: 767px) {
+  .site-footer__build {
+    order: 3;
+    width: 100%;
+  }
 }
 
 .to-top {

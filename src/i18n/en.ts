@@ -113,6 +113,7 @@ export const en: Dict = {
         days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
         message: 'Workout every Monday at 7 pm',
         parsed: 'Routine · weekly · Mon 19:00',
+        week: 'wk',
         confirm: 'Confirm',
       },
     },

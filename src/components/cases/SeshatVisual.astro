@@ -11,11 +11,12 @@ interface Props {
   parsed: string;
   confirm: string;
   provenance: string;
+  /** Подпись строк сетки: «нед» / «wk» */
+  week: string;
   compact?: boolean;
 }
-const { days, message, parsed, confirm, provenance, compact = false } = Astro.props;
+const { days, message, parsed, confirm, provenance, week, compact = false } = Astro.props;
 const weeks = 4;
-const hours = [8, 10, 12, 14, 16, 18, 20, 22];
 ---
 
 <figure class:list={['sv', compact && 'sv--compact']} data-play data-media-slot="seshat-teaser.webm · 16:9 · 8–12 s" data-status="placeholder">
@@ -51,7 +52,7 @@ const hours = [8, 10, 12, 14, 16, 18, 20, 22];
       <span class="sv__now" />
     </div>
     <div class="sv__hours">
-      {hours.map((h) => <span>{String(h).padStart(2, '0')}</span>)}
+      {Array.from({ length: weeks }, (_, w) => <span>{`${week} ${String(w + 1).padStart(2, '0')}`}</span>)}
     </div>
   </div>
 
@@ -126,7 +127,7 @@ const hours = [8, 10, 12, 14, 16, 18, 20, 22];
 
   .sv__grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 36px;
+    grid-template-columns: minmax(0, 1fr) 44px;
     grid-template-rows: auto 1fr;
     gap: 10px 14px;
   }
@@ -181,10 +182,14 @@ const hours = [8, 10, 12, 14, 16, 18, 20, 22];
     box-shadow: 0 0 18px rgb(229 107 119 / 0.55);
   }
 
+  /* Строки сетки — недели: повторяющаяся рутина загорается каждый понедельник */
   .sv__hours {
     grid-row: 2;
     display: grid;
-    align-content: space-between;
+    grid-template-rows: repeat(4, 1fr);
+    gap: 6px;
+    align-items: center;
+    white-space: nowrap;
     font-family: var(--font-mono);
     font-size: 0.625rem;
     color: var(--fg-faint);

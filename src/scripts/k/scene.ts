@@ -134,7 +134,7 @@ function seam(a: Vec2, b: Vec2, z: number, glowTex: Texture) {
 
   const core = new Mesh(
     new PlaneGeometry(len, 0.02).translate(len / 2, 0, 0),
-    new MeshBasicMaterial({ color: CORAL.clone().multiplyScalar(1.6), toneMapped: false, transparent: true }),
+    new MeshBasicMaterial({ color: CORAL.clone().multiplyScalar(1.25), toneMapped: false, transparent: true }),
   );
   const halo = new Mesh(
     new PlaneGeometry(len + 0.2, 0.34).translate(len / 2, 0, 0.002),
@@ -209,19 +209,21 @@ export class KScene {
     for (const s of this.seamParts) this.model.add(s.pivot);
 
     const [jx, jy] = toWorld(joint);
-    this.jointCore = new Mesh(new CircleGeometry(0.062, 40), new MeshBasicMaterial({ color: CORAL.clone().multiplyScalar(1.8), toneMapped: false, transparent: true }));
-    this.jointCore.position.set(jx, jy, depth.stem + 0.006);
+    // Яркость ×1.15: красный канал упирается в 1, но оттенок остаётся коралловым, а не персиковым.
+    this.jointCore = new Mesh(new CircleGeometry(0.062, 40), new MeshBasicMaterial({ color: CORAL.clone().multiplyScalar(1.15), toneMapped: false, transparent: true }));
+    // Точка узла лежит перед ореолом: аддитивное свечение не выбеливает фирменный коралл.
+    this.jointCore.position.set(jx, jy, depth.stem + 0.014);
     this.jointGlow = new Mesh(
       new PlaneGeometry(1.5, 1.5),
       new MeshBasicMaterial({ map: radialGlow(), color: CORAL, transparent: true, blending: AdditiveBlending, depthWrite: false, toneMapped: false }),
     );
-    this.jointGlow.position.set(jx, jy, depth.stem + 0.01);
+    this.jointGlow.position.set(jx, jy, depth.stem + 0.006);
     this.jointLight = new PointLight(CORAL, 0, 1.8, 2);
     this.jointLight.position.set(jx + 0.18, jy, 0.42);
     this.model.add(this.jointCore, this.jointGlow, this.jointLight);
 
     // Шеврон в узле (M 365 481 L 383 500 L 365 519 из SVG v02).
-    const chevronMat = new MeshBasicMaterial({ color: CORAL.clone().multiplyScalar(1.4), toneMapped: false, transparent: true });
+    const chevronMat = new MeshBasicMaterial({ color: CORAL.clone().multiplyScalar(1.15), toneMapped: false, transparent: true });
     for (const [a, b] of [
       [[365, 481], [383, 500]],
       [[383, 500], [365, 519]],
@@ -230,7 +232,7 @@ export class KScene {
       const [bx, by] = toWorld(b);
       const len = Math.hypot(bx - ax, by - ay);
       const bar = new Mesh(new BoxGeometry(len, 0.016, 0.004), chevronMat);
-      bar.position.set((ax + bx) / 2, (ay + by) / 2, depth.stem + 0.008);
+      bar.position.set((ax + bx) / 2, (ay + by) / 2, depth.stem + 0.012);
       bar.rotation.z = Math.atan2(by - ay, bx - ax);
       this.chevron.push(bar);
       this.model.add(bar);

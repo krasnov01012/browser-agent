@@ -1,0 +1,106 @@
+---
+import KMark from '@/components/ui/KMark.astro';
+import Arrow from '@/components/ui/Arrow.astro';
+import { localizePath, otherLocale, t, type Locale } from '@/i18n';
+
+interface Props {
+  locale: Locale;
+  path: string;
+}
+const { locale, path } = Astro.props;
+const dict = t(locale);
+const home = localizePath('/', locale);
+const alt = otherLocale(locale);
+
+const links = [
+  { href: `${home}#work`, label: dict.nav.work, index: '01' },
+  { href: `${home}#services`, label: dict.nav.services, index: '02' },
+  { href: `${home}#about`, label: dict.nav.about, index: '03' },
+];
+const menuLinks = [
+  ...links,
+  { href: `${home}#process`, label: dict.nav.process, index: '04' },
+  { href: `${home}#architect`, label: dict.nav.architect, index: '05' },
+  { href: `${home}#contact`, label: dict.nav.contact, index: '06' },
+];
+---
+
+<header class="site-header" data-header>
+  <div class="site-header__bar shell">
+    <a class="brand" href={home} aria-label={dict.a11y.home}>
+      <KMark class="brand__mark" />
+      <span class="brand__type" aria-hidden="true">
+        <span class="brand__name">Krasnoff</span>
+        <span class="brand__sub">Development</span>
+      </span>
+    </a>
+
+    <nav class="site-nav" aria-label={dict.nav.menu}>
+      <ul class="site-nav__list">
+        {
+          links.map((l) => (
+            <li>
+              <a class="site-nav__link" href={l.href}>
+                <span class="site-nav__index" aria-hidden="true">
+                  {l.index}
+                </span>
+                {l.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="site-header__actions">
+      <div class="lang" role="group" aria-label="Language">
+        <span class="lang__item is-current" aria-current="true">{locale.toUpperCase()}</span>
+        <span class="lang__sep" aria-hidden="true">/</span>
+        <a class="lang__item" href={localizePath(path, alt)} hreflang={alt} lang={alt} aria-label={dict.a11y.langSwitch} data-lang-switch>
+          {alt.toUpperCase()}
+        </a>
+      </div>
+      <a class="btn btn--primary site-header__cta" href={`${home}#contact`} data-cta="header">
+        <span>{dict.nav.cta}</span>
+        <Arrow />
+      </a>
+      <button
+        class="menu-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="site-menu"
+        data-menu-toggle
+        data-label-open={dict.a11y.menuOpen}
+        data-label-close={dict.a11y.menuClose}
+        aria-label={dict.a11y.menuOpen}
+      >
+        <span class="menu-toggle__text">{dict.nav.menu}</span>
+        <span class="menu-toggle__icon" aria-hidden="true"><i></i><i></i></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="site-menu theme-dark" id="site-menu" data-menu hidden>
+    <div class="site-menu__inner shell">
+      <ul class="site-menu__list">
+        {
+          menuLinks.map((l) => (
+            <li>
+              <a class="site-menu__link" href={l.href} data-menu-link>
+                <span class="label">{l.index}</span>
+                <span>{l.label}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <div class="site-menu__foot">
+        <a class="btn btn--primary" href={`${home}#contact`} data-menu-link>
+          <span>{dict.nav.cta}</span>
+          <Arrow />
+        </a>
+        <a class="link" href={localizePath(path, alt)} hreflang={alt} lang={alt}>{alt === 'en' ? 'English' : 'Русский'}</a>
+      </div>
+    </div>
+  </div>
+</header>

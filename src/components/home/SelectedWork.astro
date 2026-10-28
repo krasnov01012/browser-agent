@@ -1,0 +1,338 @@
+---
+/**
+ * Selected Work — два независимых продукта, две разные композиции:
+ *  001 Seshat — широкая «медленная» сцена во всю ширину, Deep Wine / Time Signal;
+ *  002 MARK  — асимметричная, смещённая вправо, «быстрая» — Deep Ink / Ice Signal,
+ *              потоки данных входят в панель с края страницы.
+ * Общая оболочка Krasnoff (сетка, шрифты, коралловый CTA) сохраняется.
+ */
+import Eyebrow from '@/components/ui/Eyebrow.astro';
+import Arrow from '@/components/ui/Arrow.astro';
+import SeshatVisual from '@/components/cases/SeshatVisual.astro';
+import MarkVisual from '@/components/cases/MarkVisual.astro';
+import { localizePath, t, type Locale } from '@/i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const dict = t(locale);
+const w = dict.work;
+---
+
+<section class="work theme-dark" id="work" aria-labelledby="work-title">
+  <div class="shell work__head grid">
+    <div class="work__head-title">
+      <Eyebrow parts={w.eyebrow} />
+      <h2 class="visually-hidden" id="work-title">{w.eyebrow[1]}</h2>
+    </div>
+    <p class="lead work__lead" data-reveal data-status="draft">{w.lead}</p>
+  </div>
+
+  <!-- 001 · SESHAT -->
+  <article class="case case--seshat theme-seshat" aria-labelledby="case-seshat">
+    <div class="shell case__grid">
+      <div class="case__meta" data-reveal-group>
+        <p class="label case__index" data-reveal>
+          <b>{w.seshat.index}</b> / {w.independent}
+        </p>
+        <h3 class="case__name" id="case-seshat" data-lines>
+          <span class="line-mask"><span>{w.seshat.name}<span class="dot">.</span></span></span>
+        </h3>
+        <p class="case__claim" data-reveal data-status="draft">{w.seshat.claim}</p>
+        <p class="body case__desc" data-reveal>{w.seshat.description}</p>
+        <ul class="case__tags" data-reveal data-status="verify">
+          {w.seshat.tags.map((tag) => <li class="label">{tag}</li>)}
+        </ul>
+        <div class="case__actions" data-reveal>
+          <a class="btn btn--ghost case__btn" href={localizePath('/work/seshat/', locale)}>
+            <span>{w.explore}</span>
+            <Arrow dir="e" />
+          </a>
+        </div>
+      </div>
+      <div class="case__media" data-reveal>
+        <SeshatVisual
+          days={w.seshat.media.days}
+          message={w.seshat.media.message}
+          parsed={w.seshat.media.parsed}
+          confirm={w.seshat.media.confirm}
+          provenance={w.seshat.provenance}
+        />
+      </div>
+    </div>
+  </article>
+
+  <!-- 002 · MARK -->
+  <article class="case case--mark" aria-labelledby="case-mark">
+    <div class="case--mark__streams" aria-hidden="true">
+      {Array.from({ length: 7 }, (_, i) => <span style={`--i:${i}`} />)}
+    </div>
+    <div class="shell">
+      <div class="case--mark__panel theme-mark">
+        <div class="case__grid case__grid--mark">
+          <div class="case__media" data-reveal>
+            <MarkVisual stages={w.mark.stages} provenance={w.mark.provenance} />
+          </div>
+          <div class="case__meta" data-reveal-group>
+            <p class="label case__index" data-reveal>
+              <b>{w.mark.index}</b> / {w.independent}
+            </p>
+            <h3 class="case__name" id="case-mark" data-lines>
+              <span class="line-mask"><span>{w.mark.name}<span class="dot">.</span></span></span>
+            </h3>
+            <p class="case__claim" data-reveal data-status="draft">{w.mark.claim}</p>
+            <p class="body case__desc" data-reveal>{w.mark.description}</p>
+            <ul class="case__tags" data-reveal>
+              {w.mark.tags.map((tag) => <li class="label">{tag}</li>)}
+            </ul>
+            <div class="case__actions" data-reveal>
+              <a class="btn btn--ghost case__btn" href={localizePath('/work/mark/', locale)}>
+                <span>{w.explore}</span>
+                <Arrow dir="e" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 003 · зарезервировано: Engineering Lab (видно только в режиме ревью) -->
+  <div class="shell" data-reserved>
+    <div class="work__lab" data-status="reserved">
+      <span class="label"><b>{w.lab.index}</b> / {w.lab.title}</span>
+      <span class="label">{w.lab.note}</span>
+    </div>
+  </div>
+</section>
+
+<style>
+  .work {
+    padding-bottom: var(--section-y);
+  }
+
+  .work__head {
+    padding-block: clamp(40px, 5vw, 80px) clamp(48px, 5vw, 80px);
+    align-items: end;
+    row-gap: 24px;
+  }
+
+  .work__head-title {
+    grid-column: 1 / span 5;
+  }
+
+  .work__lead {
+    grid-column: 7 / -1;
+  }
+
+  /* ——— Общие элементы кейса ——— */
+
+  .case__grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--col-gap);
+    row-gap: 40px;
+    align-items: center;
+  }
+
+  .case__meta {
+    display: grid;
+    align-content: start;
+    gap: 18px;
+    container-type: inline-size;
+  }
+
+  .case__index b {
+    font-weight: 500;
+    color: var(--accent);
+  }
+
+  /* Кегль от ширины колонки: «SESHAT.» ≈ 4.4em, «MARK.» ≈ 3.7em */
+  .case__name {
+    font-size: min(21.5cqi, 12rem);
+    font-weight: 660;
+    line-height: 0.82;
+    letter-spacing: -0.06em;
+    text-transform: uppercase;
+    margin-block: 4px 6px;
+  }
+
+  .case__claim {
+    font-size: var(--fs-h4);
+    font-weight: 560;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    color: var(--signal);
+  }
+
+  .case__desc {
+    max-width: 30em;
+  }
+
+  .case__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .case__tags li {
+    padding: 6px 10px;
+    border: var(--hairline) solid var(--line-strong);
+    border-radius: 2px;
+    color: var(--fg-muted);
+  }
+
+  .case__actions {
+    margin-top: 8px;
+  }
+
+  .case__btn:hover {
+    --btn-line: var(--signal);
+  }
+
+  .case__btn::before {
+    background: var(--signal);
+  }
+
+  /* ——— 001 Seshat: полная ширина, медленно, тепло ——— */
+
+  .case--seshat {
+    position: relative;
+    padding-block: clamp(72px, 9vw, 152px);
+    overflow: hidden;
+  }
+
+  /* Тонкая временная шкала поперёк всей сцены */
+  .case--seshat::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(90deg, rgb(229 107 119 / 0.07) 0 1px, transparent 1px calc(100% / 24));
+    mask-image: linear-gradient(180deg, transparent, #000 30%, #000 70%, transparent);
+    pointer-events: none;
+  }
+
+  .case--seshat .case__meta {
+    grid-column: 1 / span 5;
+    position: relative;
+  }
+
+  .case--seshat .case__media {
+    grid-column: 6 / -1;
+    position: relative;
+  }
+
+  /* ——— 002 MARK: асимметрия, панель смещена вправо, потоки входят с края ——— */
+
+  .case--mark {
+    position: relative;
+    padding-top: clamp(72px, 9vw, 152px);
+  }
+
+  .case--mark__panel {
+    position: relative;
+    margin-left: calc((100% + var(--col-gap)) / 12 * 2);
+    padding: clamp(28px, 4vw, 72px);
+    border-radius: 4px;
+  }
+
+  .case__grid--mark {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+  }
+
+  .case--mark .case__media {
+    grid-column: 1 / span 6;
+  }
+
+  .case--mark .case__meta {
+    grid-column: 7 / -1;
+  }
+
+  .case--mark .case__name {
+    font-size: min(25cqi, 9.5rem);
+  }
+
+  /* Линии данных: тянутся от левого края страницы к панели MARK */
+  .case--mark__streams {
+    position: absolute;
+    left: 0;
+    top: calc(clamp(72px, 9vw, 152px) + 30%);
+    width: calc(var(--gutter) + (100% - 2 * var(--gutter)) / 12 * 2 + 4px);
+    max-width: 50%;
+    height: 40%;
+    display: grid;
+    align-content: space-between;
+    pointer-events: none;
+  }
+
+  .case--mark__streams span {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgb(121 220 228 / 0.35));
+    position: relative;
+    overflow: hidden;
+  }
+
+  .case--mark__streams span::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 40px;
+    height: 1px;
+    background: var(--mark-signal);
+    opacity: 0;
+  }
+
+  :global(.motion) .case--mark__streams span::after {
+    animation: stream 3.2s linear infinite;
+    animation-delay: calc(var(--i) * -0.47s);
+  }
+
+  @keyframes stream {
+    from {
+      transform: translateX(-40px);
+      opacity: 0.9;
+    }
+    to {
+      transform: translateX(30vw);
+      opacity: 0.9;
+    }
+  }
+
+  .work__lab {
+    margin-top: 48px;
+    padding: 20px 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    border-top: var(--hairline) dashed var(--line-strong);
+  }
+
+  /* ——— Адаптив ——— */
+  @media (max-width: 1023px) {
+    .work__head-title,
+    .work__lead {
+      grid-column: 1 / -1;
+    }
+
+    .case--seshat .case__meta,
+    .case--seshat .case__media,
+    .case--mark .case__media,
+    .case--mark .case__meta {
+      grid-column: 1 / -1;
+    }
+
+    .case--mark .case__meta {
+      grid-row: 1;
+    }
+
+    .case--mark__panel {
+      margin-left: 0;
+    }
+
+    .case--mark__streams {
+      display: none;
+    }
+  }
+</style>

@@ -1,0 +1,441 @@
+---
+/**
+ * Поля связи — общие для короткой заявки и шага 4 Project Architect.
+ * Одна форма, один endpoint, выбор канала ответа: Telegram или Email (D09).
+ */
+import Arrow from '@/components/ui/Arrow.astro';
+import { localizePath, t, type Locale } from '@/i18n';
+
+interface Props {
+  locale: Locale;
+  id: string;
+  withMessage?: boolean;
+}
+const { locale, id, withMessage = true } = Astro.props;
+const f = t(locale).contact.form;
+const e = t(locale).contact.errors;
+---
+
+<div class="lf" data-lead-fields>
+  <div class="lf__context" data-context hidden>
+    <span class="label">{f.context}</span>
+    <span class="lf__context-chip">
+      <span data-context-label></span>
+      <button type="button" data-context-clear aria-label={f.removeContext}>×</button>
+    </span>
+  </div>
+
+  <div class="lf__grid">
+    <div class="field">
+      <label class="field__label" for={`${id}-name`}>{f.name}</label>
+      <input class="field__input" id={`${id}-name`} name="name" type="text" autocomplete="name" placeholder={f.namePlaceholder} required minlength="2" maxlength="80" aria-describedby={`${id}-name-err`} />
+      <p class="field__error" id={`${id}-name-err`} data-error-for="name" data-msg={e.name}></p>
+    </div>
+
+    <fieldset class="field field--channel">
+      <legend class="field__label">{f.channel}</legend>
+      <div class="segmented">
+        <label>
+          <input type="radio" name="reply_channel" value="telegram" checked />
+          <span>{f.telegram}</span>
+        </label>
+        <label>
+          <input type="radio" name="reply_channel" value="email" />
+          <span>{f.email}</span>
+        </label>
+        <span class="segmented__thumb" aria-hidden="true"></span>
+      </div>
+    </fieldset>
+
+    <div class="field field--contact">
+      <label class="field__label" for={`${id}-contact`} data-contact-label data-telegram={f.contactTelegram} data-email={f.contactEmail}>{f.contactTelegram}</label>
+      <input
+        class="field__input"
+        id={`${id}-contact`}
+        name="reply_value"
+        type="text"
+        autocomplete="off"
+        inputmode="text"
+        spellcheck="false"
+        placeholder={f.contactTelegramPlaceholder}
+        data-placeholder-telegram={f.contactTelegramPlaceholder}
+        data-placeholder-email={f.contactEmailPlaceholder}
+        required
+        maxlength="254"
+        aria-describedby={`${id}-contact-err`}
+      />
+      <p class="field__error" id={`${id}-contact-err`} data-error-for="reply_value" data-msg-telegram={e.telegram} data-msg-email={e.email}></p>
+    </div>
+
+    {
+      withMessage && (
+        <div class="field field--message">
+          <label class="field__label" for={`${id}-message`}>{f.message}</label>
+          <textarea class="field__input field__textarea" id={`${id}-message`} name="description" rows="6" placeholder={f.messagePlaceholder} required minlength="20" maxlength="5000" aria-describedby={`${id}-message-err`} />
+          <p class="field__error" id={`${id}-message-err`} data-error-for="description" data-msg={e.message} />
+        </div>
+      )
+    }
+  </div>
+
+  <!-- Ловушка для ботов: невидима для людей и скринридеров -->
+  <div class="lf__hp" aria-hidden="true">
+    <label for={`${id}-website`}>Website</label>
+    <input id={`${id}-website`} name="website" type="text" tabindex="-1" autocomplete="off" />
+  </div>
+
+  <div class="lf__foot">
+    <label class="check">
+      <input type="checkbox" name="consent" required aria-describedby={`${id}-consent-err`} />
+      <span class="check__box" aria-hidden="true"></span>
+      <span class="check__text" data-status="draft">
+        {f.consent}
+        <a class="check__link" href={localizePath('/privacy/', locale)}>{f.privacy}</a>
+      </span>
+    </label>
+    <p class="field__error" id={`${id}-consent-err`} data-error-for="consent" data-msg={e.consent}></p>
+
+    <button class="btn btn--primary lf__submit" type="submit" data-label={f.submit} data-label-busy={f.sending}>
+      <span data-submit-label>{f.submit}</span>
+      <Arrow />
+    </button>
+  </div>
+
+  <div class="lf__status" role="status" aria-live="polite" data-form-status></div>
+</div>
+
+<style>
+  .lf {
+    display: grid;
+    gap: 28px;
+  }
+
+  .lf__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px var(--col-gap);
+  }
+
+  @media (max-width: 1023px) {
+    .lf__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .field--contact {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .field--message {
+    grid-column: 1 / -1;
+  }
+
+  .field {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
+  .field__label {
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    font-weight: 500;
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--fg-faint);
+  }
+
+  .field__input {
+    width: 100%;
+    min-height: 54px;
+    padding: 14px 16px;
+    font-size: 1rem;
+    line-height: 1.4;
+    color: var(--fg);
+    background: var(--bg-panel);
+    border: var(--hairline) solid var(--line);
+    border-bottom-color: var(--line-strong);
+    border-radius: var(--radius);
+    outline: none;
+    transition:
+      border-color var(--dur-s) var(--ease-out),
+      background-color var(--dur-s) var(--ease-out);
+  }
+
+  .field__input::placeholder {
+    color: rgb(243 240 233 / 0.32);
+  }
+
+  .field__input:hover {
+    border-color: var(--line-strong);
+  }
+
+  .field__input:focus-visible {
+    border-color: var(--coral);
+    background: var(--graphite-3);
+    outline: none;
+  }
+
+  .field__input[aria-invalid='true'] {
+    border-color: var(--coral);
+  }
+
+  .field__textarea {
+    min-height: 168px;
+    resize: vertical;
+  }
+
+  .field__error {
+    min-height: 0;
+    font-size: 0.8125rem;
+    color: var(--coral-soft);
+  }
+
+  .field__error:empty {
+    display: none;
+  }
+
+  /* ——— Сегментированный выбор канала ——— */
+  .segmented {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 4px;
+    min-height: 54px;
+    background: var(--bg-panel);
+    border: var(--hairline) solid var(--line);
+    border-radius: var(--radius);
+  }
+
+  .segmented label {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--fg-muted);
+    transition: color var(--dur-s) var(--ease-out);
+  }
+
+  .segmented input {
+    position: absolute;
+    opacity: 0;
+    inset: 0;
+    cursor: pointer;
+  }
+
+  .segmented label:has(input:checked) {
+    color: var(--graphite);
+  }
+
+  .segmented label:has(input:focus-visible) {
+    outline: 2px solid var(--coral);
+    outline-offset: 2px;
+  }
+
+  .segmented__thumb {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    width: calc(50% - 4px);
+    background: var(--ivory);
+    border-radius: 1px;
+    transition: transform var(--dur-m) var(--ease-out);
+  }
+
+  .segmented:has(label:nth-child(2) input:checked) .segmented__thumb {
+    transform: translateX(100%);
+  }
+
+  /* ——— Контекст из CTA ——— */
+  .lf__context {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .lf__context[hidden] {
+    display: none;
+  }
+
+  .lf__context-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 6px 6px 12px;
+    font-size: 0.875rem;
+    border: var(--hairline) solid var(--coral);
+    border-radius: 2px;
+  }
+
+  .lf__context-chip button {
+    width: 28px;
+    height: 28px;
+    font-size: 1.125rem;
+    line-height: 1;
+    color: var(--fg-muted);
+  }
+
+  .lf__context-chip button:hover {
+    color: var(--coral);
+  }
+
+  /* ——— Согласие и отправка ——— */
+  .lf__foot {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px 32px;
+    padding-top: 8px;
+  }
+
+  .lf__foot > .field__error {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .lf__submit {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    min-width: 240px;
+  }
+
+  .lf__submit[disabled] {
+    opacity: 0.7;
+    cursor: progress;
+  }
+
+  .check {
+    position: relative;
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    gap: 14px;
+    align-items: start;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--fg-muted);
+    cursor: pointer;
+  }
+
+  .check input {
+    position: absolute;
+    opacity: 0;
+    width: 22px;
+    height: 22px;
+    margin: 0;
+  }
+
+  .check__box {
+    width: 22px;
+    height: 22px;
+    border: var(--hairline) solid var(--line-strong);
+    border-radius: 2px;
+    display: grid;
+    place-items: center;
+    transition: background-color var(--dur-s) var(--ease-out), border-color var(--dur-s) var(--ease-out);
+  }
+
+  .check__box::after {
+    content: '';
+    width: 10px;
+    height: 6px;
+    border-left: 2px solid var(--graphite);
+    border-bottom: 2px solid var(--graphite);
+    transform: rotate(-45deg) translate(1px, -1px) scale(0);
+    transition: transform var(--dur-s) var(--ease-out);
+  }
+
+  .check input:checked + .check__box {
+    background: var(--coral);
+    border-color: var(--coral);
+  }
+
+  .check input:checked + .check__box::after {
+    transform: rotate(-45deg) translate(1px, -1px) scale(1);
+  }
+
+  .check input:focus-visible + .check__box {
+    outline: 2px solid var(--coral);
+    outline-offset: 3px;
+  }
+
+  .check input[aria-invalid='true'] + .check__box {
+    border-color: var(--coral);
+  }
+
+  .check__link {
+    margin-left: 4px;
+    color: var(--fg);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 3px;
+  }
+
+  .check__link:hover {
+    text-decoration-color: var(--coral);
+  }
+
+  .lf__hp {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  /* ——— Статус отправки ——— */
+  .lf__status:empty {
+    display: none;
+  }
+
+  .lf__status {
+    display: grid;
+    gap: 6px;
+    padding: 18px 20px;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    border-left: 2px solid var(--line-strong);
+    background: var(--bg-panel);
+  }
+
+  .lf__status[data-tone='success'] {
+    border-color: #6fd3a0;
+  }
+
+  .lf__status[data-tone='warn'] {
+    border-color: #f2c14e;
+  }
+
+  .lf__status[data-tone='error'] {
+    border-color: var(--coral);
+  }
+
+  @media (max-width: 767px) {
+    .lf__grid {
+      grid-template-columns: 1fr;
+    }
+
+    .lf__foot {
+      grid-template-columns: 1fr;
+    }
+
+    .lf__foot > .field__error,
+    .lf__submit {
+      grid-column: 1;
+      grid-row: auto;
+    }
+
+    .lf__submit {
+      width: 100%;
+    }
+  }
+</style>

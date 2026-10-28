@@ -1,0 +1,12 @@
+---
+interface Props {
+  parts: string[];
+  class?: string;
+}
+const { parts, class: className } = Astro.props;
+const [index, label] = parts;
+---
+
+<p class:list={['label eyebrow', className]} data-reveal>
+  <span><b>{index}</b>&nbsp;&nbsp;—&nbsp;&nbsp;{label}</span>
+</p>

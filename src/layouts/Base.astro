@@ -1,0 +1,90 @@
+---
+import '@fontsource-variable/geist/wght.css';
+import '@fontsource/ibm-plex-mono/400.css';
+import '@fontsource/ibm-plex-mono/500.css';
+import '@/styles/tokens.css';
+import '@/styles/base.css';
+import '@/styles/chrome.css';
+
+import geistLatin from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url';
+import geistCyrillic from '@fontsource-variable/geist/files/geist-cyrillic-wght-normal.woff2?url';
+
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import ReviewBar from '@/components/ReviewBar.astro';
+import { localeMeta, locales, localizePath, t, type Locale } from '@/i18n';
+
+interface Props {
+  locale: Locale;
+  /** Путь страницы без префикса языка, например '/work/seshat/' */
+  path: string;
+  title?: string;
+  description?: string;
+  /** Тема тела страницы до первой секции (влияет на цвет фона при overscroll). */
+  bodyTheme?: 'dark' | 'light';
+  /** Черновые кейсы не индексируются до фактчекинга (MARK v1.2 §7). */
+  noindex?: boolean;
+}
+
+const { locale, path, title, description, bodyTheme = 'dark', noindex = false } = Astro.props;
+const dict = t(locale);
+const pageTitle = title ?? dict.meta.title;
+const pageDescription = description ?? dict.meta.description;
+const site = Astro.site ?? new URL('https://krasnoff.example');
+const canonical = new URL(localizePath(path, locale), site).href;
+const ogImage = new URL('/media/og/krasnoff-og.png', site).href;
+---
+
+<!doctype html>
+<html lang={localeMeta[locale].htmlLang} class="no-js" data-locale={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDescription} />
+    <link rel="canonical" href={canonical} />
+    {locales.map((l) => <link rel="alternate" hreflang={l} href={new URL(localizePath(path, l), site).href} />)}
+    <link rel="alternate" hreflang="x-default" href={new URL(localizePath(path, 'en'), site).href} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Krasnoff Development" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDescription} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={localeMeta[locale].ogLocale} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <meta name="theme-color" content="#0B0D11" />
+    <meta name="color-scheme" content="dark light" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/media/k/apple-touch-icon.png" />
+
+    <link rel="preload" href={locale === 'ru' ? geistCyrillic : geistLatin} as="font" type="font/woff2" crossorigin />
+    {locale === 'ru' && <link rel="preload" href={geistLatin} as="font" type="font/woff2" crossorigin />}
+
+    <script is:inline>
+      // Флаги до первой отрисовки: есть JS, разрешено ли движение, режим ревью.
+      (function () {
+        var d = document.documentElement;
+        d.classList.remove('no-js');
+        d.classList.add('js');
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('motion');
+        if (/[?&]review(=|&|$)/.test(location.search)) d.classList.add('review');
+      })();
+    </script>
+  </head>
+  <body class:list={[`theme-${bodyTheme}`]}>
+    <a class="skip-link" href="#main">{dict.a11y.skip}</a>
+    <Header locale={locale} path={path} />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <Footer locale={locale} path={path} />
+    <ReviewBar locale={locale} />
+    <script>
+      import '@/scripts/site';
+    </script>
+  </body>
+</html>

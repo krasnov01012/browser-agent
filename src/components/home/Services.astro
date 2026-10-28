@@ -1,0 +1,365 @@
+---
+import Lines from '@/components/ui/Lines.astro';
+import Eyebrow from '@/components/ui/Eyebrow.astro';
+import Arrow from '@/components/ui/Arrow.astro';
+import ServiceDiagram from '@/components/home/ServiceDiagram.astro';
+import { t, type Locale } from '@/i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const dict = t(locale);
+const items = dict.services.items;
+---
+
+<section class="services section theme-light" id="services" aria-labelledby="services-title" data-status="proposed">
+  <div class="shell">
+    <header class="services__head grid">
+      <div class="services__title">
+        <Eyebrow parts={dict.services.eyebrow} />
+        <Lines id="services-title" class="h2" lines={dict.services.titleLines} status="draft" />
+      </div>
+      <p class="lead services__lead" data-reveal>{dict.services.lead}</p>
+    </header>
+
+    <div class="svc" data-services>
+      {
+        items.map((item, i) => {
+          const n = String(i + 1).padStart(2, '0');
+          return (
+            <div class="svc__item" id={`service-${item.id}`} data-svc-item={item.id} data-active={i === 0 ? '' : undefined}>
+              <h3 class="svc__row-wrap">
+                <button class="svc__row" type="button" aria-expanded={i === 0 ? 'true' : 'false'} aria-controls={`svc-panel-${item.id}`} data-svc-trigger>
+                  <span class="svc__index label">{n}</span>
+                  <span class="svc__name">{item.title}</span>
+                  <span class="svc__short">{item.short}</span>
+                  <span class="svc__plus" aria-hidden="true" />
+                </button>
+              </h3>
+              <div class="svc__panel theme-dark" id={`svc-panel-${item.id}`} role="region" aria-label={item.title} data-svc-panel>
+                <div class="svc__panel-inner">
+                  <div class="svc__panel-head">
+                    <span class="label">
+                      <b class="label--accent">{n}</b> / 05
+                    </span>
+                    <span class="label">{item.id.toUpperCase()}</span>
+                  </div>
+                  <div class="svc__diagram">
+                    <ServiceDiagram kind={item.id} />
+                  </div>
+                  <p class="svc__desc">{item.description}</p>
+                  <p class="label svc__deliver-label">{dict.services.deliverablesLabel}</p>
+                  <ul class="svc__deliver">
+                    {item.deliverables.map((d) => (
+                      <li>{d}</li>
+                    ))}
+                  </ul>
+                  <a class="link svc__cta" href="#contact" data-intent-source={`service_${item.id}`} data-intent="service" data-intent-label={item.title}>
+                    {dict.services.cta}
+                    <Arrow />
+                  </a>
+                </div>
+              </div>
+            </div>
+          );
+        })
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .services__head {
+    align-items: end;
+    row-gap: 32px;
+    margin-bottom: clamp(56px, 7vw, 112px);
+  }
+
+  .services__title {
+    grid-column: 1 / span 7;
+    display: grid;
+    gap: 28px;
+  }
+
+  .services__lead {
+    grid-column: 9 / -1;
+    color: var(--fg-muted);
+  }
+
+  /* ——— Каталог: строки слева, общая панель справа ——— */
+
+  .svc {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    /* Шестая гибкая строка забирает высоту панели — строки каталога не растягиваются. */
+    grid-template-rows: repeat(5, auto) 1fr;
+    column-gap: clamp(32px, 5vw, 96px);
+    border-top: var(--hairline) solid var(--line-strong);
+  }
+
+  .svc__item {
+    display: contents;
+  }
+
+  .svc__row-wrap {
+    grid-column: 1;
+    font: inherit;
+  }
+
+  .svc__item:nth-child(1) .svc__row-wrap { grid-row: 1; }
+  .svc__item:nth-child(2) .svc__row-wrap { grid-row: 2; }
+  .svc__item:nth-child(3) .svc__row-wrap { grid-row: 3; }
+  .svc__item:nth-child(4) .svc__row-wrap { grid-row: 4; }
+  .svc__item:nth-child(5) .svc__row-wrap { grid-row: 5; }
+
+  .svc__row {
+    position: relative;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    grid-template-areas: 'idx name plus' 'idx short plus';
+    align-items: center;
+    column-gap: 12px;
+    row-gap: 6px;
+    padding: clamp(22px, 2.6vw, 34px) 0;
+    text-align: left;
+    border-bottom: var(--hairline) solid var(--line);
+    transition: padding var(--dur-m) var(--ease-out);
+  }
+
+  /* Коралловая «сигнальная» линия активной строки */
+  .svc__row::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 100%;
+    height: 2px;
+    background: var(--coral);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 700ms var(--ease-mech);
+  }
+
+  .svc__item[data-active] .svc__row::before {
+    transform: none;
+  }
+
+  .svc__index {
+    grid-area: idx;
+    align-self: start;
+    padding-top: 0.9em;
+    transition: color var(--dur-s) var(--ease-out);
+  }
+
+  .svc__name {
+    grid-area: name;
+    font-size: clamp(1.625rem, 1rem + 2.1vw, 3.25rem);
+    font-weight: 600;
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+    transition:
+      transform var(--dur-m) var(--ease-out),
+      color var(--dur-s) var(--ease-out);
+  }
+
+  .svc__short {
+    grid-area: short;
+    font-size: var(--fs-small);
+    color: var(--fg-faint);
+    transition: transform var(--dur-m) var(--ease-out);
+  }
+
+  .svc__plus {
+    grid-area: plus;
+    position: relative;
+    width: 18px;
+    height: 18px;
+  }
+
+  .svc__plus::before,
+  .svc__plus::after {
+    content: '';
+    position: absolute;
+    inset: 50% 0 auto;
+    height: 1.5px;
+    background: currentColor;
+    transition: transform var(--dur-m) var(--ease-out);
+  }
+
+  .svc__plus::after {
+    transform: rotate(90deg);
+  }
+
+  .svc__item[data-active] .svc__plus::after {
+    transform: rotate(0deg);
+  }
+
+  .svc__row:hover .svc__name,
+  .svc__item[data-active] .svc__name,
+  .svc__row:hover .svc__short,
+  .svc__item[data-active] .svc__short {
+    transform: translateX(10px);
+  }
+
+  .svc__item[data-active] .svc__index,
+  .svc__row:hover .svc__index {
+    color: var(--accent);
+  }
+
+  .svc__item:not([data-active]) .svc__name {
+    color: rgb(11 13 17 / 0.62);
+  }
+
+  .svc__item:not([data-active]) .svc__row:hover .svc__name {
+    color: var(--fg);
+  }
+
+  /* ——— Панель ——— */
+
+  .svc__panel {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    align-self: start;
+    position: sticky;
+    top: calc(var(--header-h) + 24px);
+    margin-top: 32px;
+    border-radius: var(--radius);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(12px);
+    transition:
+      opacity var(--dur-m) var(--ease-out),
+      transform var(--dur-m) var(--ease-out),
+      visibility 0s linear var(--dur-m);
+  }
+
+  .svc__item[data-active] .svc__panel {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition-delay: 60ms, 60ms, 0s;
+  }
+
+  .svc__panel-inner {
+    display: grid;
+    gap: 20px;
+    padding: clamp(24px, 2.4vw, 40px);
+  }
+
+  .svc__panel-head {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .svc__panel-head b {
+    font-weight: 500;
+  }
+
+  .svc__diagram {
+    padding: 12px 0 8px;
+    border-bottom: var(--hairline) solid var(--line);
+  }
+
+  .svc__desc {
+    font-size: 1.0625rem;
+    line-height: 1.55;
+    color: rgb(243 240 233 / 0.86);
+  }
+
+  .svc__deliver-label {
+    margin-top: 4px;
+  }
+
+  .svc__deliver {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 20px;
+    font-size: 0.9375rem;
+    color: var(--fg-muted);
+  }
+
+  .svc__deliver li {
+    display: flex;
+    gap: 10px;
+  }
+
+  .svc__deliver li::before {
+    content: '';
+    flex: none;
+    width: 6px;
+    height: 6px;
+    margin-top: 0.62em;
+    border: 1px solid var(--coral);
+    transform: rotate(45deg);
+  }
+
+  .svc__cta {
+    justify-self: start;
+    margin-top: 8px;
+    color: var(--coral);
+  }
+
+  /* ——— Без JS: простой список, всё раскрыто ——— */
+  :global(.no-js) .svc {
+    display: block;
+  }
+
+  :global(.no-js) .svc__item {
+    display: block;
+  }
+
+  :global(.no-js) .svc__panel {
+    position: static;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    margin: 0 0 24px;
+  }
+
+  /* ——— Планшет и телефон: аккордеон, панель под своей строкой ——— */
+  @media (max-width: 1023px) {
+    .services__title,
+    .services__lead {
+      grid-column: 1 / -1;
+    }
+
+    .svc {
+      display: block;
+    }
+
+    .svc__item {
+      display: block;
+    }
+
+    .svc__row {
+      grid-template-columns: 40px minmax(0, 1fr) auto;
+    }
+
+    .svc__panel {
+      position: static;
+      margin: 0;
+      display: none;
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+    }
+
+    .svc__item[data-active] .svc__panel {
+      display: block;
+      animation: svc-open var(--dur-m) var(--ease-out);
+    }
+
+    @keyframes svc-open {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+    }
+
+    .svc__deliver {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

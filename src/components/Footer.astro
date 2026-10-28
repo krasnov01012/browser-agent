@@ -1,0 +1,70 @@
+---
+import KMark from '@/components/ui/KMark.astro';
+import Arrow from '@/components/ui/Arrow.astro';
+import { localizePath, otherLocale, t, type Locale } from '@/i18n';
+
+interface Props {
+  locale: Locale;
+  path: string;
+}
+const { locale, path } = Astro.props;
+const dict = t(locale);
+const home = localizePath('/', locale);
+const alt = otherLocale(locale);
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer theme-dark">
+  <div class="shell">
+    <div class="site-footer__top">
+      <div class="site-footer__intro">
+        <KMark class="brand__mark" />
+        <p class="lead">{dict.footer.tagline}</p>
+        <div>
+          <a class="btn btn--primary" href={`${home}#contact`} data-cta="footer">
+            <span>{dict.nav.cta}</span>
+            <Arrow />
+          </a>
+        </div>
+      </div>
+      <div class="site-footer__cols">
+        <nav class="site-footer__col" aria-labelledby="f-nav">
+          <h2 class="label" id="f-nav">{dict.footer.navTitle}</h2>
+          <ul>
+            <li><a href={`${home}#services`}>{dict.nav.services}</a></li>
+            <li><a href={`${home}#about`}>{dict.nav.about}</a></li>
+            <li><a href={`${home}#process`}>{dict.nav.process}</a></li>
+            <li><a href={`${home}#architect`}>{dict.nav.architect}</a></li>
+            <li><a href={`${home}#contact`}>{dict.nav.contact}</a></li>
+          </ul>
+        </nav>
+        <nav class="site-footer__col" aria-labelledby="f-work">
+          <h2 class="label" id="f-work">{dict.footer.workTitle}</h2>
+          <ul>
+            <li><a href={localizePath('/work/seshat/', locale)}>Seshat</a></li>
+            <li><a href={localizePath('/work/mark/', locale)}>Mark</a></li>
+          </ul>
+        </nav>
+        <div class="site-footer__col">
+          <h2 class="label">{dict.footer.langTitle}</h2>
+          <ul>
+            <li><a href={localizePath(path, alt)} hreflang={alt} lang={alt}>{alt === 'en' ? 'English' : 'Русский'}</a></li>
+          </ul>
+          <h2 class="label" style="margin-top:28px">{dict.footer.legalTitle}</h2>
+          <ul>
+            <li><a href={localizePath('/privacy/', locale)} data-status="placeholder">{dict.footer.privacy}</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="site-footer__mark" aria-hidden="true">
+      <span class="site-footer__word">Krasnoff</span>
+    </div>
+
+    <div class="site-footer__bottom">
+      <p class="label">© {year} {dict.footer.rights}</p>
+      <a class="label to-top" href="#main" data-to-top>{dict.footer.top} <Arrow dir="ne" /></a>
+    </div>
+  </div>
+</footer>

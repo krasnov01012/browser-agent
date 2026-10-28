@@ -1,0 +1,313 @@
+---
+/**
+ * MARK — концептуальная схема «Сигнал вместо шума» (синтетика, НЕ интерфейс продукта).
+ * Поток вакансий из двух источников → единый формат → явные правила отсекают
+ * большую часть → AI-оценка по приватному профилю → один сигнал уходит в Telegram.
+ * Никаких чисел, процентов и «скорингов» — только форма процесса.
+ */
+interface Props {
+  stages: string[];
+  provenance: string;
+}
+const { stages, provenance } = Astro.props;
+
+// Судьба каждой строки: отсев правилами, отсев AI или проход. Детерминированно.
+const lanes = [56, 84, 112, 140, 168, 196, 224, 252, 280];
+const fates = ['rules', 'rules', 'ai', 'rules', 'pass', 'rules', 'ai', 'rules', 'rules', 'ai', 'rules', 'rules', 'pass', 'rules'];
+const bars = fates.map((fate, i) => ({
+  fate,
+  y: lanes[(i * 4) % lanes.length]!,
+  w: 34 + ((i * 37) % 46),
+  delay: (i * 0.43) % 6,
+}));
+const gates = [
+  { x: 250, label: stages[1] },
+  { x: 420, label: stages[2] },
+  { x: 580, label: stages[3] },
+];
+---
+
+<figure class="mv" data-play data-media-slot="mark-teaser.webm · 16:9 · 8–12 s" data-status="placeholder">
+  <svg class="mv__svg" viewBox="0 0 800 340" aria-hidden="true">
+    <defs>
+      <linearGradient id="mv-fade" x1="0" x2="1">
+        <stop offset="0" stop-color="#79dce4" stop-opacity="0" />
+        <stop offset="1" stop-color="#79dce4" stop-opacity="1" />
+      </linearGradient>
+    </defs>
+
+    <g class="mv__lanes">
+      {lanes.map((y) => <path d={`M0 ${y} H720`} />)}
+    </g>
+
+    <g class="mv__sources">
+      <text x="0" y="30">HH API</text>
+      <text x="0" y="318">HABR RSS</text>
+    </g>
+
+    <g class="mv__bars">
+      {
+        bars.map((b) => (
+          <rect class={`mv__bar mv__bar--${b.fate}`} x={-b.w} y={b.y - 4} width={b.w} height="8" rx="1" style={`--d:${b.delay}s`} />
+        ))
+      }
+    </g>
+
+    <g class="mv__gates">
+      {
+        gates.map((g, i) => (
+          <g>
+            {i === 2 ? (
+              <path class="mv__gate mv__gate--ai" d={`M${g.x} 132 L${g.x + 36} 168 L${g.x} 204 L${g.x - 36} 168 Z`} />
+            ) : (
+              <path class="mv__gate" d={`M${g.x} 40 V296 M${g.x - 6} 40 H${g.x + 6} M${g.x - 6} 296 H${g.x + 6}`} />
+            )}
+          </g>
+        ))
+      }
+    </g>
+
+    <g class="mv__out">
+      <rect x="690" y="132" width="104" height="72" rx="8" />
+      <path d="M706 156 H770 M706 170 H756 M706 184 H762" />
+      <circle class="mv__ping" cx="790" cy="136" r="5" />
+      <text x="742" y="226" text-anchor="middle">TELEGRAM</text>
+    </g>
+  </svg>
+
+  <ol class="mv__stages">
+    {
+      stages.map((s, i) => (
+        <li>
+          <span class="label">{String(i + 1).padStart(2, '0')}</span>
+          <span>{s}</span>
+        </li>
+      ))
+    }
+  </ol>
+
+  <figcaption class="provenance">{provenance}</figcaption>
+</figure>
+
+<style>
+  .mv {
+    position: relative;
+    display: grid;
+    gap: 18px;
+    padding: clamp(18px, 2.2vw, 32px);
+    background: var(--mark-panel);
+    border: var(--hairline) solid var(--mark-border);
+    border-radius: 4px;
+    overflow: hidden;
+    color: var(--ivory);
+  }
+
+  .mv__svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .mv__lanes path {
+    stroke: rgb(121 220 228 / 0.1);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .mv text {
+    fill: #8fb0b8;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+  }
+
+  .mv__bar {
+    fill: rgb(232 241 241 / 0.55);
+  }
+
+  .mv__bar--pass {
+    fill: rgb(232 241 241 / 0.8);
+  }
+
+  .mv__gate {
+    fill: none;
+    stroke: rgb(232 241 241 / 0.55);
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .mv__gate--ai {
+    fill: rgb(121 220 228 / 0.08);
+    stroke: var(--mark-signal);
+  }
+
+  .mv__out rect {
+    fill: rgb(121 220 228 / 0.08);
+    stroke: var(--mark-signal);
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .mv__out path {
+    stroke: rgb(232 241 241 / 0.5);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .mv__ping {
+    fill: var(--mark-signal);
+  }
+
+  /* Без движения: статичный «снимок» — несколько строк на разных этапах */
+  .mv__bar {
+    transform: translateX(calc(var(--d) * 110px + 60px));
+  }
+
+  .mv__bar--rules {
+    opacity: 0.5;
+  }
+
+  .mv__bar--pass {
+    fill: var(--mark-signal);
+  }
+
+  /* ——— Движение: строки текут слева направо; гейты отсекают ——— */
+  :global(.motion) .mv.is-playing .mv__bar {
+    animation: 6s linear infinite;
+    animation-delay: calc(var(--d) * -1);
+  }
+
+  :global(.motion) .mv.is-playing .mv__bar--rules {
+    animation-name: mv-rules;
+  }
+
+  :global(.motion) .mv.is-playing .mv__bar--ai {
+    animation-name: mv-ai;
+  }
+
+  :global(.motion) .mv.is-playing .mv__bar--pass {
+    animation-name: mv-pass;
+  }
+
+  @keyframes mv-rules {
+    0% {
+      transform: translateX(0);
+      opacity: 0;
+    }
+    6% {
+      opacity: 1;
+    }
+    52% {
+      transform: translateX(410px);
+      opacity: 1;
+    }
+    64%,
+    100% {
+      transform: translate(416px, 16px);
+      opacity: 0;
+    }
+  }
+
+  @keyframes mv-ai {
+    0% {
+      transform: translateX(0);
+      opacity: 0;
+    }
+    6% {
+      opacity: 1;
+    }
+    72% {
+      transform: translateX(560px);
+      opacity: 1;
+    }
+    84%,
+    100% {
+      transform: translate(566px, 16px);
+      opacity: 0;
+    }
+  }
+
+  @keyframes mv-pass {
+    0% {
+      transform: translateX(0);
+      opacity: 0;
+      fill: rgb(232 241 241 / 0.8);
+    }
+    6% {
+      opacity: 1;
+    }
+    70% {
+      fill: rgb(232 241 241 / 0.8);
+    }
+    76% {
+      fill: #79dce4;
+    }
+    92% {
+      transform: translateX(700px);
+      opacity: 1;
+      fill: #79dce4;
+    }
+    100% {
+      transform: translateX(720px);
+      opacity: 0;
+      fill: #79dce4;
+    }
+  }
+
+  :global(.motion) .mv.is-playing .mv__ping {
+    animation: mv-ping 3s ease-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  @keyframes mv-ping {
+    0%,
+    70% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    85% {
+      transform: scale(1.8);
+      opacity: 0.4;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  /* ——— Подписи этапов ——— */
+  .mv__stages {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    border-top: var(--hairline) solid var(--mark-border);
+  }
+
+  .mv__stages li {
+    display: grid;
+    gap: 4px;
+    padding: 12px 10px 0 0;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: rgb(232 241 241 / 0.82);
+  }
+
+  .mv__stages li:last-child {
+    color: var(--mark-signal);
+  }
+
+  .mv__stages .label {
+    font-size: 0.625rem;
+  }
+
+  .mv .provenance {
+    color: #8fb0b8;
+  }
+
+  @media (max-width: 559px) {
+    .mv__stages {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      row-gap: 10px;
+    }
+  }
+</style>

@@ -1,0 +1,31 @@
+---
+/**
+ * Заголовок, разбитый на строки с маской — для построчного появления.
+ * Последняя строка получает «сигнальную» точку, если dot=true.
+ */
+interface Props {
+  lines: string[];
+  as?: 'h1' | 'h2' | 'h3' | 'p';
+  class?: string;
+  dot?: boolean;
+  delay?: number;
+  id?: string;
+  status?: string;
+}
+const { lines, as: Tag = 'h2', class: className, dot = true, delay = 0, id, status } = Astro.props;
+const cleaned = lines.map((l) => l.replace(/[.]$/, ''));
+---
+
+<Tag class={className} data-lines id={id} data-status={status} style={`--lines-delay:${delay}ms`}>
+  {
+    cleaned.map((line, i) => (
+      <span class="line-mask" style={`--line-i:${i}`}>
+        <span>
+          {line}
+          {i === cleaned.length - 1 && dot && <span class="dot">.</span>}
+          {i < cleaned.length - 1 && lines[i]!.endsWith('.') && <span>.</span>}
+        </span>
+      </span>
+    ))
+  }
+</Tag>

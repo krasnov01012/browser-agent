@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1680 600" width="1680" height="600"><defs>
+  <linearGradient id="stem" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#4E555B"/><stop offset=".20" stop-color="#FAFAF7"/><stop offset=".52" stop-color="#D3D5D3"/><stop offset=".92" stop-color="#838891"/><stop offset="1" stop-color="#33363C"/></linearGradient>
+  <linearGradient id="upper" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#42484F"/><stop offset=".35" stop-color="#ABB0B2"/><stop offset=".78" stop-color="#F9F7F0"/><stop offset="1" stop-color="#C5C6C4"/></linearGradient>
+  <linearGradient id="lower" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#EEEDEA"/><stop offset=".44" stop-color="#C6C6C2"/><stop offset="1" stop-color="#5E626A"/></linearGradient>
+  <filter id="glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="13"/></filter>
+  <linearGradient id="line" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FF6548"/><stop offset=".50" stop-color="#FF9976"/><stop offset="1" stop-color="#FF6548"/></linearGradient>
+</defs>
+<rect width="1680" height="600" fill="#0B0D11"/>
+<g transform="translate(86 -56) scale(.69)"><polygon points="363,470 675,125 827,125 426,526" fill="url(#upper)" stroke="#12151A" stroke-width="5" stroke-linejoin="bevel"/>
+<polygon points="363,530 426,474 827,875 675,875" fill="url(#lower)" stroke="#12151A" stroke-width="5" stroke-linejoin="bevel"/>
+<!-- Coral detail follows the inner architectural seams; light never changes the letter silhouette. -->
+<path d="M 379 474 L 803 135 M 379 526 L 803 865" stroke="#FF6548" stroke-width="14" fill="none" opacity=".46" filter="url(#glow)"/>
+<path d="M 379 474 L 803 135 M 379 526 L 803 865" stroke="url(#line)" stroke-width="4.5" fill="none" opacity=".94"/>
+<polygon points="246,125 363,125 363,875 246,875" fill="url(#stem)" stroke="#1E2228" stroke-width="5"/>
+<path d="M 256 129 V 871" stroke="#FFFFFF" stroke-opacity=".46" stroke-width="2"/>
+<path d="M 354 129 V 871" stroke="#23272B" stroke-width="5"/>
+<path d="M 365 481 L 383 500 L 365 519" fill="none" stroke="#FF6548" stroke-width="4"/>
+<circle cx="368" cy="500" r="11" fill="#FF6548" opacity=".9" filter="url(#glow)"/></g>
+<path d="M815 110 V490" stroke="#777C93" opacity=".38"/>
+<text x="880" y="286" fill="#F3F0E9" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="92" letter-spacing="14">KRASNOFF</text>
+<text x="885" y="368" fill="#777C93" font-family="Arial, Helvetica, sans-serif" font-size="28" letter-spacing="22">DEVELOPMENT</text>
+<path d="M887 400H945" stroke="#FF6548" stroke-width="4"/>
+</svg>

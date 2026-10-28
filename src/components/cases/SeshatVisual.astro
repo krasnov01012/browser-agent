@@ -1,0 +1,305 @@
+---
+/**
+ * Seshat — концептуальная схема «Время под контролем» (НЕ интерфейс продукта).
+ * Запрос обычным языком → разобранная рутина → подтверждение → понедельники в 19:00
+ * загораются по сетке четырёх недель; по сетке идёт сигнал текущего времени.
+ * Место под реальное демо-видео: data-media-slot (см. docs/brief/04_CASES.md).
+ */
+interface Props {
+  days: string[];
+  message: string;
+  parsed: string;
+  confirm: string;
+  provenance: string;
+  compact?: boolean;
+}
+const { days, message, parsed, confirm, provenance, compact = false } = Astro.props;
+const weeks = 4;
+const hours = [8, 10, 12, 14, 16, 18, 20, 22];
+---
+
+<figure class:list={['sv', compact && 'sv--compact']} data-play data-media-slot="seshat-teaser.webm · 16:9 · 8–12 s" data-status="placeholder">
+  <div class="sv__flow">
+    <div class="sv__msg">
+      <span class="sv__msg-meta label">REQUEST</span>
+      <p>{message}</p>
+    </div>
+    <svg class="sv__arrow" viewBox="0 0 60 12" aria-hidden="true"><path d="M0 6 H56 M50 1 L56 6 L50 11" /></svg>
+    <div class="sv__card">
+      <span class="sv__msg-meta label">PARSED · RRULE</span>
+      <p>{parsed}</p>
+      <span class="sv__confirm">{confirm}</span>
+    </div>
+  </div>
+
+  <div class="sv__grid" aria-hidden="true">
+    <div class="sv__days">
+      {days.map((d) => <span class="label">{d}</span>)}
+    </div>
+    <div class="sv__weeks">
+      {
+        Array.from({ length: weeks }, (_, w) => (
+          <div class="sv__week" style={`--w:${w}`}>
+            {days.map((_, d) => (
+              <div class:list={['sv__cell', d === 0 && 'sv__cell--hit']} style={`--d:${d}`}>
+                {d === 0 && <span class="sv__slot">19:00</span>}
+              </div>
+            ))}
+          </div>
+        ))
+      }
+      <span class="sv__now" />
+    </div>
+    <div class="sv__hours">
+      {hours.map((h) => <span>{String(h).padStart(2, '0')}</span>)}
+    </div>
+  </div>
+
+  <figcaption class="provenance">{provenance}</figcaption>
+</figure>
+
+<style>
+  .sv {
+    position: relative;
+    display: grid;
+    gap: clamp(20px, 2.4vw, 36px);
+    padding: clamp(20px, 2.6vw, 40px);
+    background:
+      linear-gradient(180deg, rgb(229 107 119 / 0.06), transparent 40%),
+      var(--seshat-panel);
+    border: var(--hairline) solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+    color: var(--ivory);
+  }
+
+  .sv__flow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+  }
+
+  .sv__msg,
+  .sv__card {
+    display: grid;
+    gap: 8px;
+    padding: 14px 16px;
+    border-radius: 3px;
+    font-size: 0.9375rem;
+    line-height: 1.35;
+  }
+
+  .sv__msg {
+    background: rgb(243 240 233 / 0.06);
+    border: var(--hairline) solid rgb(243 240 233 / 0.12);
+  }
+
+  .sv__card {
+    background: rgb(229 107 119 / 0.1);
+    border: var(--hairline) solid rgb(229 107 119 / 0.45);
+  }
+
+  .sv__msg-meta {
+    font-size: 0.625rem;
+  }
+
+  .sv__confirm {
+    justify-self: start;
+    margin-top: 4px;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--seshat-wine);
+    background: var(--seshat-signal);
+    border-radius: 2px;
+  }
+
+  .sv__arrow {
+    width: 100%;
+    fill: none;
+    stroke: var(--seshat-signal);
+    stroke-width: 1.4;
+  }
+
+  /* ——— Сетка недель ——— */
+
+  .sv__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 36px;
+    grid-template-rows: auto 1fr;
+    gap: 10px 14px;
+  }
+
+  .sv__days {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .sv__days .label {
+    font-size: 0.625rem;
+  }
+
+  .sv__weeks {
+    position: relative;
+    grid-row: 2;
+    display: grid;
+    gap: 6px;
+  }
+
+  .sv__week {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .sv__cell {
+    position: relative;
+    aspect-ratio: 1.6;
+    border-radius: 2px;
+    background:
+      repeating-linear-gradient(180deg, rgb(243 240 233 / 0.05) 0 1px, transparent 1px 25%),
+      rgb(243 240 233 / 0.025);
+    border: var(--hairline) solid rgb(243 240 233 / 0.06);
+  }
+
+  .sv__slot {
+    position: absolute;
+    left: 6%;
+    right: 6%;
+    top: 68%;
+    height: 22%;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    letter-spacing: 0.06em;
+    color: var(--seshat-wine);
+    background: var(--seshat-signal);
+    border-radius: 1px;
+    box-shadow: 0 0 18px rgb(229 107 119 / 0.55);
+  }
+
+  .sv__hours {
+    grid-row: 2;
+    display: grid;
+    align-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    color: var(--fg-faint);
+  }
+
+  /* Сигнал текущего времени: тонкая линия, медленно идущая по сетке */
+  .sv__now {
+    position: absolute;
+    top: -6px;
+    bottom: -6px;
+    left: 0;
+    width: 1px;
+    background: linear-gradient(180deg, transparent, var(--seshat-signal) 20%, var(--seshat-signal) 80%, transparent);
+    box-shadow: 0 0 12px var(--seshat-signal);
+    opacity: 0;
+  }
+
+  .sv .provenance {
+    color: #c8aab7;
+  }
+
+  /* ——— Движение: только когда сцена видна (класс .is-playing) ——— */
+  .sv__slot {
+    transform-origin: left;
+  }
+
+  :global(.motion) .sv.is-playing .sv__slot {
+    animation: sv-slot 9s var(--ease-out) infinite;
+    animation-delay: calc(1.6s + var(--w, 0) * 0.45s);
+  }
+
+  @keyframes sv-slot {
+    0% {
+      transform: scaleX(0);
+    }
+    8%,
+    88% {
+      transform: none;
+      opacity: 1;
+    }
+    100% {
+      transform: none;
+      opacity: 0;
+    }
+  }
+
+  :global(.motion) .sv.is-playing .sv__now {
+    animation: sv-now 9s linear infinite;
+  }
+
+  @keyframes sv-now {
+    0% {
+      left: 0;
+      opacity: 0;
+    }
+    6% {
+      opacity: 1;
+    }
+    94% {
+      opacity: 1;
+    }
+    100% {
+      left: 100%;
+      opacity: 0;
+    }
+  }
+
+  :global(.motion) .sv.is-playing .sv__card {
+    animation: sv-card 9s var(--ease-out) infinite;
+  }
+
+  @keyframes sv-card {
+    0%,
+    6% {
+      opacity: 0.25;
+      transform: translateX(-8px);
+    }
+    14%,
+    100% {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  :global(.motion) .sv.is-playing .sv__confirm {
+    animation: sv-confirm 9s var(--ease-out) infinite;
+  }
+
+  @keyframes sv-confirm {
+    0%,
+    15% {
+      filter: brightness(0.6);
+      transform: scale(0.96);
+    }
+    19%,
+    100% {
+      filter: none;
+      transform: none;
+    }
+  }
+
+  .sv--compact .sv__flow {
+    display: none;
+  }
+
+  @media (max-width: 559px) {
+    .sv__flow {
+      grid-template-columns: 1fr;
+    }
+
+    .sv__arrow {
+      width: 12px;
+      height: 32px;
+      justify-self: center;
+      transform: rotate(90deg);
+    }
+  }
+</style>

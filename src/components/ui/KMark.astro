@@ -1,0 +1,24 @@
+---
+/**
+ * Плоская K v02 из geometry.json (координаты 1000×1000, обрезано до знака).
+ * Используется в шапке, подвале и favicon — не замена 3D-знаку в Hero.
+ */
+interface Props {
+  class?: string;
+  title?: string;
+}
+const { class: className, title } = Astro.props;
+---
+
+<svg
+  class:list={['kmark', className]}
+  viewBox="236 115 601 770"
+  role={title ? 'img' : undefined}
+  aria-hidden={title ? undefined : 'true'}
+  aria-label={title}
+>
+  <polygon points="363,470 675,125 827,125 426,526" fill="currentColor" opacity="0.78"></polygon>
+  <polygon points="363,530 426,474 827,875 675,875" fill="currentColor" opacity="0.92"></polygon>
+  <polygon points="246,125 363,125 363,875 246,875" fill="currentColor"></polygon>
+  <rect class="kmark__joint" x="336" y="464" width="72" height="72" transform="rotate(45 372 500)" fill="var(--coral)"></rect>
+</svg>

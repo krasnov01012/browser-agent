@@ -1,0 +1,83 @@
+---
+/**
+ * Мост Services → Selected Work: «возможности → доказательства».
+ * Первая строка на ivory, вторая — на графитовой плоскости, которая
+ * раскрывается до полной ширины по мере прокрутки (CSS scroll-driven animation,
+ * без JS и без перехвата скролла; где не поддерживается — просто статично).
+ */
+import { t, type Locale } from '@/i18n';
+
+interface Props {
+  locale: Locale;
+}
+const dict = t(Astro.props.locale);
+const [first, second] = dict.bridge.lines;
+---
+
+<div class="bridge theme-light" data-status="draft">
+  <div class="shell">
+    <p class="bridge__line bridge__line--light" data-lines aria-hidden="true">
+      <span class="line-mask"><span>{first}</span></span>
+    </p>
+  </div>
+  <div class="bridge__plate theme-dark">
+    <div class="shell">
+      <p class="bridge__line bridge__line--dark" data-lines aria-hidden="true">
+        <span class="line-mask"><span>{second!.replace(/\.$/, '')}<span class="dot">.</span></span></span>
+      </p>
+    </div>
+  </div>
+  <p class="visually-hidden">{first} {second}</p>
+</div>
+
+<style>
+  .bridge {
+    position: relative;
+    padding-top: clamp(40px, 6vw, 96px);
+  }
+
+  .bridge__line {
+    font-size: clamp(2.5rem, 0.6rem + 7.6vw, 10.5rem);
+    font-weight: 640;
+    line-height: 0.9;
+    letter-spacing: -0.05em;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+
+  .bridge__line--light {
+    padding-bottom: clamp(24px, 3vw, 48px);
+  }
+
+  .bridge__line--dark {
+    padding-block: clamp(36px, 5vw, 80px) 0;
+    text-align: right;
+  }
+
+  .bridge__plate {
+    position: relative;
+  }
+
+  @supports (animation-timeline: view()) {
+    :global(.motion) .bridge__plate {
+      animation: bridge-open linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 45%;
+    }
+
+    @keyframes bridge-open {
+      from {
+        clip-path: inset(0 var(--gutter) 0 var(--gutter) round 6px);
+      }
+      to {
+        clip-path: inset(0 0 0 0 round 0);
+      }
+    }
+  }
+
+  @media (max-width: 767px) {
+    .bridge__line--dark {
+      text-align: left;
+    }
+  }
+</style>

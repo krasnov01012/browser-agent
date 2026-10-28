@@ -1,0 +1,262 @@
+---
+/**
+ * «Как»: пять этапов от задачи до сопровождения + форматы работы + политика цен
+ * (цен нет — объясняем, как готовится предложение). Трек с узлами заполняется
+ * коралловым «сигналом» по мере прокрутки (scroll-driven, без JS).
+ */
+import Lines from '@/components/ui/Lines.astro';
+import Eyebrow from '@/components/ui/Eyebrow.astro';
+import { t, type Locale } from '@/i18n';
+
+interface Props {
+  locale: Locale;
+}
+const dict = t(Astro.props.locale);
+const p = dict.process;
+---
+
+<section class="process section theme-light" id="process" aria-labelledby="process-title">
+  <div class="shell">
+    <div class="process__head">
+      <Eyebrow parts={p.eyebrow} />
+      <Lines id="process-title" class="h2" lines={p.titleLines} status="draft" />
+    </div>
+
+    <div class="track" data-status="draft">
+      <div class="track__rail" aria-hidden="true"><span class="track__signal"></span></div>
+      <ol class="track__steps" data-reveal-group>
+        {
+          p.steps.map((s, i) => (
+            <li class:list={['track__step', 'optional' in s && 'track__step--optional']} data-reveal>
+              <span class="track__node" aria-hidden="true" />
+              <span class="label track__num">
+                {String(i + 1).padStart(2, '0')}
+                {'optional' in s && <em> · {s.optional}</em>}
+              </span>
+              <h3 class="h4">{s.title}</h3>
+              <p class="body">{s.text}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+
+    <div class="process__models grid">
+      <p class="label process__models-label" data-reveal>{p.modelsLabel}</p>
+      <ul class="models" data-reveal-group>
+        {
+          p.models.map((m, i) => (
+            <li class="model" data-reveal>
+              <span class="label">{['A', 'B', 'C'][i]}</span>
+              <h3 class="model__title">{m.title}</h3>
+              <p class="body">{m.text}</p>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="process__pricing" data-reveal>
+        <span class="process__pricing-mark" aria-hidden="true" />
+        {p.pricing}
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .process {
+    border-top: var(--hairline) solid var(--line);
+  }
+
+  .process__head {
+    display: grid;
+    gap: 28px;
+    margin-bottom: clamp(56px, 7vw, 112px);
+  }
+
+  /* ——— Трек этапов ——— */
+
+  .track {
+    position: relative;
+  }
+
+  .track__rail {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 4px;
+    height: var(--hairline);
+    background: var(--line-strong);
+  }
+
+  .track__signal {
+    position: absolute;
+    inset: 0;
+    background: var(--coral);
+    height: 2px;
+    top: -0.5px;
+    transform-origin: left;
+  }
+
+  @supports (animation-timeline: view()) {
+    :global(.motion) .track__signal {
+      animation: track-fill linear both;
+      animation-timeline: view();
+      animation-range: entry 40% cover 55%;
+    }
+
+    @keyframes track-fill {
+      from {
+        transform: scaleX(0);
+      }
+      to {
+        transform: scaleX(0.8);
+      }
+    }
+  }
+
+  :global(html:not(.motion)) .track__signal {
+    transform: scaleX(0.8);
+  }
+
+  .track__steps {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--col-gap);
+  }
+
+  .track__step {
+    position: relative;
+    display: grid;
+    align-content: start;
+    gap: 14px;
+    padding-top: 36px;
+  }
+
+  .track__node {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 9px;
+    height: 9px;
+    background: var(--coral);
+  }
+
+  .track__step--optional .track__node {
+    background: var(--bg);
+    border: var(--hairline) dashed var(--fg);
+  }
+
+  .track__num em {
+    font-style: normal;
+    color: var(--fg-faint);
+  }
+
+  .track__num {
+    color: var(--accent);
+  }
+
+  .track__step .body {
+    font-size: 0.9375rem;
+  }
+
+  /* ——— Форматы работы и цены ——— */
+
+  .process__models {
+    margin-top: clamp(72px, 9vw, 144px);
+    padding-top: 32px;
+    border-top: var(--hairline) solid var(--line-strong);
+    row-gap: 32px;
+  }
+
+  .process__models-label {
+    grid-column: 1 / span 3;
+  }
+
+  .models {
+    grid-column: 4 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--col-gap);
+  }
+
+  .model {
+    display: grid;
+    align-content: start;
+    gap: 12px;
+  }
+
+  .model .label {
+    color: var(--accent);
+  }
+
+  .model__title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .model .body {
+    font-size: 0.9375rem;
+  }
+
+  .process__pricing {
+    grid-column: 4 / -1;
+    position: relative;
+    margin-top: 16px;
+    padding: 28px 32px 28px 56px;
+    font-size: clamp(1.125rem, 0.95rem + 0.6vw, 1.5rem);
+    line-height: 1.4;
+    letter-spacing: -0.015em;
+    background: var(--bg-raised);
+    border-radius: var(--radius);
+  }
+
+  .process__pricing-mark {
+    position: absolute;
+    left: 28px;
+    top: 38px;
+    width: 9px;
+    height: 9px;
+    border: var(--hairline) solid var(--coral);
+    transform: rotate(45deg);
+  }
+
+  @media (max-width: 1023px) {
+    .track__rail {
+      left: 4px;
+      right: auto;
+      top: 0;
+      bottom: 0;
+      width: var(--hairline);
+      height: auto;
+    }
+
+    .track__signal {
+      display: none;
+    }
+
+    .track__steps {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+
+    .track__step {
+      padding: 0 0 0 40px;
+    }
+
+    .track__node {
+      top: 6px;
+    }
+
+    .process__models-label,
+    .models,
+    .process__pricing {
+      grid-column: 1 / -1;
+    }
+
+    .models {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

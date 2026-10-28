@@ -1,0 +1,221 @@
+---
+/**
+ * Приём обращений: один раздел, два режима (PROPOSED — объединение Contact и
+ * Project Architect в одну секцию, см. docs/OPEN_QUESTIONS.md):
+ *   «Короткая заявка» — имя, канал ответа, контакт, описание;
+ *   «Бриф проекта»   — 4 шага, затем те же поля связи.
+ * Оба режима отправляют один и тот же контракт (src/lib/leads.ts).
+ */
+import Lines from '@/components/ui/Lines.astro';
+import Eyebrow from '@/components/ui/Eyebrow.astro';
+import LeadFields from '@/components/intake/LeadFields.astro';
+import Architect from '@/components/intake/Architect.astro';
+import { t, type Locale } from '@/i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const dict = t(locale);
+const c = dict.contact;
+const endpoint = import.meta.env.PUBLIC_LEADS_ENDPOINT ?? '';
+---
+
+<section class="intake section theme-dark" id="contact" aria-labelledby="contact-title" data-endpoint={endpoint} data-locale={locale}>
+  <span id="architect" class="intake__anchor" aria-hidden="true"></span>
+  <script type="application/json" data-form-messages set:html={JSON.stringify({ ...c.states, summary: c.errors.summary })} />
+  <div class="shell">
+    <div class="intake__head grid">
+      <div class="intake__title">
+        <Eyebrow parts={c.eyebrow} />
+        <Lines id="contact-title" class="h2" lines={c.titleLines} status="draft" />
+      </div>
+      <div class="intake__notes" data-reveal-group>
+        <p class="lead" data-reveal>{c.lead}</p>
+        <ul class="intake__facts">
+          <li data-reveal><span class="label">→</span>{c.next}</li>
+          <li data-reveal><span class="label">→</span>{c.noPrice}</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="console" data-tabs data-reveal>
+      <div class="console__tabs" role="tablist" aria-label={c.eyebrow[1]}>
+        <button class="console__tab" type="button" role="tab" id="tab-quick" aria-controls="panel-quick" aria-selected="true" data-tab="quick">
+          <span class="label">A</span>
+          {c.modes.quick}
+        </button>
+        <button class="console__tab" type="button" role="tab" id="tab-brief" aria-controls="panel-brief" aria-selected="false" tabindex="-1" data-tab="brief" data-hash="architect">
+          <span class="label">B</span>
+          {c.modes.brief}
+          <span class="console__badge label">4</span>
+        </button>
+        <span class="console__ink" aria-hidden="true"></span>
+      </div>
+
+      <div class="console__panel" id="panel-quick" role="tabpanel" aria-labelledby="tab-quick" tabindex="0">
+        <form class="quick" data-contact-form="quick" novalidate>
+          <LeadFields locale={locale} id="quick" />
+        </form>
+      </div>
+
+      <div class="console__panel" id="panel-brief" role="tabpanel" aria-labelledby="tab-brief" tabindex="0" hidden>
+        <p class="console__lead">{dict.architect.lead}</p>
+        <Architect locale={locale} />
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .intake {
+    position: relative;
+    border-top: var(--hairline) solid var(--line);
+  }
+
+  .intake__anchor {
+    position: absolute;
+    top: 0;
+  }
+
+  .intake__head {
+    row-gap: 40px;
+    align-items: end;
+    margin-bottom: clamp(48px, 6vw, 96px);
+  }
+
+  .intake__title {
+    grid-column: 1 / span 7;
+    display: grid;
+    gap: 28px;
+  }
+
+  .intake__notes {
+    grid-column: 8 / -1;
+    display: grid;
+    gap: 24px;
+  }
+
+  .intake__facts {
+    display: grid;
+    gap: 12px;
+    font-size: 0.9375rem;
+    color: var(--fg-muted);
+  }
+
+  .intake__facts li {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+  }
+
+  .intake__facts .label {
+    color: var(--coral);
+  }
+
+  /* ——— «Пульт»: переключатель режимов + панель ——— */
+  .console {
+    border: var(--hairline) solid var(--line);
+    border-radius: 4px;
+    background: var(--graphite-1);
+  }
+
+  .console__tabs {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: var(--hairline) solid var(--line);
+  }
+
+  .console__tab {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 72px;
+    padding: 0 clamp(20px, 3vw, 40px);
+    font-size: clamp(1rem, 0.9rem + 0.4vw, 1.25rem);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    text-align: left;
+    color: var(--fg-faint);
+    transition: color var(--dur-s) var(--ease-out), background-color var(--dur-s) var(--ease-out);
+  }
+
+  .console__tab + .console__tab {
+    border-left: var(--hairline) solid var(--line);
+  }
+
+  .console__tab:hover {
+    color: var(--fg);
+  }
+
+  .console__tab[aria-selected='true'] {
+    color: var(--fg);
+    background: var(--graphite-2);
+  }
+
+  .console__tab[aria-selected='true'] .label {
+    color: var(--coral);
+  }
+
+  .console__badge {
+    margin-left: auto;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border: var(--hairline) solid var(--line-strong);
+    border-radius: 50%;
+    font-size: 0.625rem;
+  }
+
+  .console__ink {
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 50%;
+    height: 2px;
+    background: var(--coral);
+    transition: transform var(--dur-m) var(--ease-out);
+  }
+
+  .console:has(#tab-brief[aria-selected='true']) .console__ink {
+    transform: translateX(100%);
+  }
+
+  .console__panel {
+    padding: clamp(24px, 4vw, 56px);
+  }
+
+  .console__panel:focus-visible {
+    outline-offset: -4px;
+  }
+
+  .console__lead {
+    max-width: 44em;
+    margin-bottom: clamp(28px, 3vw, 44px);
+    color: var(--fg-muted);
+  }
+
+  :global(.no-js) #tab-brief {
+    display: none;
+  }
+
+  @media (max-width: 1023px) {
+    .intake__title,
+    .intake__notes {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 559px) {
+    .console__tab {
+      min-height: 64px;
+      font-size: 0.9375rem;
+      gap: 10px;
+    }
+
+    .console__badge {
+      display: none;
+    }
+  }
+</style>

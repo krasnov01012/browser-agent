@@ -1,0 +1,163 @@
+---
+/**
+ * Чертёж построения K v02 в том же пространстве 1000×1000, что и 3D-кадр.
+ * Все точки — реальные вершины из geometry.json; подписи — вычисленные размеры.
+ * Линии выходят за квадрат сцены и обрезаются краем Hero — «регистрационные метки».
+ */
+interface Props {
+  beamAngle: number;
+  stemWidth: number;
+  height: number;
+}
+const { beamAngle, stemWidth, height } = Astro.props;
+
+const nodes: [number, number][] = [
+  [246, 125], [363, 125], [363, 875], [246, 875],
+  [675, 125], [827, 125], [827, 875], [675, 875],
+  [426, 526], [426, 474], [363, 470], [363, 530],
+];
+---
+
+<svg class="k-blueprint" viewBox="0 0 1000 1000" aria-hidden="true" overflow="visible">
+  <g class="kb-grid">
+    <path pathLength="1" d="M-1400 125 H2400" />
+    <path pathLength="1" d="M-1400 875 H2400" />
+    <path pathLength="1" d="M-1400 500 H2400" class="kb-axis" />
+    <path pathLength="1" d="M246 -900 V1900" />
+    <path pathLength="1" d="M363 -900 V1900" class="kb-axis" />
+    <path pathLength="1" d="M827 -900 V1900" />
+  </g>
+  <g class="kb-construct">
+    <circle pathLength="1" cx="363" cy="500" r="390" class="kb-dash" />
+    <path pathLength="1" d="M363 470 L675 125 L760 31" />
+    <path pathLength="1" d="M426 526 L827 125 L900 52" />
+    <path pathLength="1" d="M426 474 L827 875 L900 948" />
+    <path pathLength="1" d="M363 530 L675 875 L760 969" />
+    <path pathLength="1" d="M246 125 H827 V875 H246 Z" class="kb-frame" />
+  </g>
+  <g class="kb-nodes">
+    {nodes.map(([x, y], i) => <rect x={x - 5} y={y - 5} width="10" height="10" style={`--n:${i}`} />)}
+    <circle cx="363" cy="500" r="7" class="kb-joint" />
+  </g>
+  <g class="kb-dims">
+    <path d="M246 88 H363 M246 80 V96 M363 80 V96" />
+    <text x="304.5" y="70" text-anchor="middle">{stemWidth}</text>
+    <path d="M200 125 V875 M192 125 H208 M192 875 H208" />
+    <text x="170" y="505" text-anchor="middle" transform="rotate(-90 170 505)">{height}</text>
+    <text x="700" y="300" class="kb-angle">{beamAngle}°</text>
+    <text x="378" y="466" class="kb-coord">363 · 500</text>
+  </g>
+</svg>
+
+<style>
+  .k-blueprint {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    z-index: 0;
+    fill: none;
+    stroke-linecap: square;
+  }
+
+  .kb-grid path {
+    stroke: var(--steel);
+    stroke-width: 1;
+    opacity: 0.18;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .kb-grid .kb-axis {
+    opacity: 0.28;
+  }
+
+  .kb-construct > * {
+    stroke: var(--steel);
+    stroke-width: 1;
+    opacity: 0.42;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .kb-construct .kb-dash {
+    stroke-dasharray: 0.006 0.008;
+    opacity: 0.5;
+  }
+
+  .kb-construct .kb-frame {
+    opacity: 0.22;
+  }
+
+  .kb-nodes rect {
+    fill: var(--graphite);
+    stroke: var(--steel-light);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .kb-joint {
+    fill: var(--coral);
+  }
+
+  .kb-dims path {
+    stroke: var(--steel);
+    stroke-width: 1;
+    opacity: 0.6;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .kb-dims text {
+    fill: var(--steel-light);
+    font-family: var(--font-mono);
+    font-size: 17px;
+    letter-spacing: 0.08em;
+  }
+
+  .kb-dims .kb-coord {
+    fill: var(--coral);
+  }
+
+  /* Прорисовка чертежа: линии «чертятся», узлы проявляются по очереди. */
+  :global(.motion) .kb-grid path,
+  :global(.motion) .kb-construct > :not(.kb-dash) {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: kb-draw 1800ms var(--ease-mech) forwards;
+  }
+
+  :global(.motion) .kb-construct > * {
+    animation-delay: 500ms;
+  }
+
+  :global(.motion) .kb-construct .kb-dash {
+    animation: kb-fade 1600ms var(--ease-out) 700ms backwards;
+  }
+
+  :global(.motion) .kb-nodes rect,
+  :global(.motion) .kb-joint {
+    animation: kb-fade 500ms var(--ease-out) backwards;
+    animation-delay: calc(900ms + var(--n, 12) * 60ms);
+  }
+
+  :global(.motion) .kb-dims {
+    animation: kb-fade 900ms var(--ease-out) 1600ms backwards;
+  }
+
+  @keyframes kb-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes kb-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .kb-dims {
+      display: none;
+    }
+  }
+</style>

@@ -1,0 +1,94 @@
+/*
+ * Дизайн-токены Krasnoff Development.
+ * Статусы — по docs/brief/00_DECISIONS.md:
+ *   [APPROVED]  graphite / ivory / coral / steel, палитры кейсов Seshat и MARK v1.2;
+ *   [PROPOSED]  шрифтовая пара Geist + IBM Plex Mono, шкала, сетка, тайминги;
+ *   [DERIVED]   производные оттенки — получены из утверждённых ради контраста AA,
+ *               новых брендовых цветов не вводят.
+ */
+:root {
+  /* — Бренд [APPROVED] — */
+  --graphite: #0b0d11;
+  --ivory: #f3f0e9;
+  --coral: #ff6548;
+  --steel: #777c93;
+
+  /* — Производные [DERIVED] — */
+  --graphite-1: #101318;           /* приподнятая поверхность на графите */
+  --graphite-2: #161a21;           /* панели, поля ввода */
+  --graphite-3: #1e232c;           /* hover-состояния панелей */
+  --ivory-1: #ebe7dd;              /* утопленная поверхность на ivory */
+  --ivory-2: #e1dccf;              /* разделители-плашки на ivory */
+  --coral-strong: #c4401f;         /* коралловый текст на ivory: 4.9:1 */
+  --coral-soft: #ff8a70;           /* подсветка шва, hover */
+  --steel-ink: #565b70;            /* подписи на ivory: 5.9:1 */
+  --steel-light: #9ca0b3;          /* подписи на графите: 7.2:1 */
+
+  /* — Seshat v1.2 [APPROVED] — */
+  --seshat-wine: #21131f;
+  --seshat-panel: #17121d;
+  --seshat-signal: #e56b77;
+  --seshat-border: #59404c;
+
+  /* — MARK v1.2 [APPROVED] — */
+  --mark-ink: #101923;
+  --mark-panel: #172833;
+  --mark-signal: #79dce4;
+  --mark-mist: #e8f1f1;
+  --mark-border: #385362;
+
+  /* — Типографика [PROPOSED] — */
+  --font-sans: 'Geist Variable', 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  --fs-label: 0.75rem;                                   /* 12 — моно-подписи */
+  --fs-small: 0.875rem;                                  /* 14 */
+  --fs-body: clamp(1rem, 0.95rem + 0.22vw, 1.125rem);    /* 16–18 */
+  --fs-lead: clamp(1.125rem, 1rem + 0.45vw, 1.4375rem);  /* 18–23 */
+  --fs-h4: clamp(1.25rem, 1.05rem + 0.7vw, 1.75rem);
+  --fs-h3: clamp(1.625rem, 1.2rem + 1.5vw, 2.75rem);
+  --fs-h2: clamp(2.5rem, 1.3rem + 4.6vw, 6.5rem);
+  --fs-display: clamp(3rem, 1rem + 7.4vw, 9rem);
+
+  --lh-tight: 0.9;
+  --lh-heading: 1;
+  --lh-body: 1.6;
+  --track-display: -0.045em;
+  --track-heading: -0.035em;
+  --track-label: 0.12em;
+
+  /* — Сетка и ритм [PROPOSED] — */
+  --page-max: 1520px;
+  --gutter: clamp(20px, 4.4vw, 72px);
+  --col-gap: clamp(16px, 2vw, 32px);
+  --section-y: clamp(96px, 11vw, 184px);
+  --header-h: 72px;
+  --radius: 2px;
+  --hairline: 1px;
+
+  /* — Движение [PROPOSED] — */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-mech: cubic-bezier(0.7, 0, 0.18, 1);
+  --dur-xs: 160ms;
+  --dur-s: 280ms;
+  --dur-m: 450ms;
+  --dur-l: 700ms;
+
+  color-scheme: dark;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --header-h: 64px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-xs: 0ms;
+    --dur-s: 0ms;
+    --dur-m: 0ms;
+    --dur-l: 0ms;
+  }
+}

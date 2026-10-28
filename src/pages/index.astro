@@ -1,0 +1,36 @@
+---
+/*
+ * Корень `/`. Язык по умолчанию и политика редиректа НЕ решены (docs/OPEN_QUESTIONS.md).
+ * Временно: выбор по языку браузера на клиенте, без JS — явные ссылки.
+ * На хостинге это лучше заменить серверным редиректом по Accept-Language.
+ */
+import { defaultLocale } from '@/i18n';
+const site = Astro.site ?? new URL('https://krasnoff.example');
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Krasnoff Development</title>
+    <meta name="robots" content="noindex" />
+    <link rel="alternate" hreflang="ru" href={new URL('/ru/', site).href} />
+    <link rel="alternate" hreflang="en" href={new URL('/en/', site).href} />
+    <link rel="alternate" hreflang="x-default" href={new URL('/en/', site).href} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script is:inline define:vars={{ fallback: defaultLocale }}>
+      var langs = (navigator.languages || [navigator.language || '']).map(function (l) { return String(l).toLowerCase(); });
+      var ru = langs.some(function (l) { return /^(ru|be|uk|kk|ky|uz|tg|hy|az|ka)\b/.test(l); });
+      var en = langs.some(function (l) { return /^en\b/.test(l); });
+      location.replace('/' + (ru ? 'ru' : en ? 'en' : fallback) + '/');
+    </script>
+    <style>
+      body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #0b0d11; color: #f3f0e9; font: 16px/1.5 system-ui, sans-serif; }
+      a { color: #ff6548; margin: 0 12px; }
+    </style>
+  </head>
+  <body>
+    <p><a href="/ru/">Русский</a> <a href="/en/">English</a></p>
+  </body>
+</html>

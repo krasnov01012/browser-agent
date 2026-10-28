@@ -1,0 +1,76 @@
+{
+  "version": "0.2 working geometry",
+  "status": "Working 2D + 3D geometric interpretation; not final approved brand asset",
+  "visual_reference": "APPROVED_VISUAL_REFERENCE.png",
+  "projection": "1000x1000 top-left SVG space; 3D world mapping (x-500)/165, (500-y)/165",
+  "components": {
+    "K_STEM": [
+      [
+        246,
+        125
+      ],
+      [
+        363,
+        125
+      ],
+      [
+        363,
+        875
+      ],
+      [
+        246,
+        875
+      ]
+    ],
+    "K_UPPER_BEAM": [
+      [
+        363,
+        470
+      ],
+      [
+        675,
+        125
+      ],
+      [
+        827,
+        125
+      ],
+      [
+        426,
+        526
+      ]
+    ],
+    "K_LOWER_BEAM": [
+      [
+        363,
+        530
+      ],
+      [
+        426,
+        474
+      ],
+      [
+        827,
+        875
+      ],
+      [
+        675,
+        875
+      ]
+    ]
+  },
+  "main_palette": {
+    "graphite": "#0B0D11",
+    "ivory": "#F3F0E9",
+    "signal": "#FF6548",
+    "steel": "#777C93"
+  },
+  "source_of_truth": "geometry.json and make_krasnoff_v02.py",
+  "3d_file": "architectural-k.glb",
+  "notes": [
+    "Read as a single Latin K (not K/N)",
+    "3 structural parts and emissive seam objects",
+    "Approved rendering is an artistic reference, not a CAD master",
+    "3D metallic shading and typography are exploratory"
+  ]
+}

@@ -1,0 +1,153 @@
+---
+/**
+ * «Почему» и «кто»: студия без выдуманной команды + четыре инженерных принципа.
+ * Контент — черновик (About/Expertise ещё не обсуждались с владельцем).
+ * Композиция: крупное заявление слева, принципы — «чертёжной» таблицей 2×2
+ * с узлами на пересечениях линий (мотив стыков K).
+ */
+import Lines from '@/components/ui/Lines.astro';
+import Eyebrow from '@/components/ui/Eyebrow.astro';
+import { t, type Locale } from '@/i18n';
+
+interface Props {
+  locale: Locale;
+}
+const dict = t(Astro.props.locale);
+const a = dict.approach;
+---
+
+<section class="approach section theme-light" id="about" aria-labelledby="about-title">
+  <div class="shell">
+    <div class="approach__head grid">
+      <div class="approach__title">
+        <Eyebrow parts={a.eyebrow} />
+        <Lines id="about-title" class="h2" lines={a.titleLines} status="draft" />
+      </div>
+      <p class="approach__studio" data-reveal data-status="draft">
+        {a.studio}
+      </p>
+    </div>
+
+    <ol class="principles" data-reveal-group data-status="draft">
+      {
+        a.principles.map((p, i) => (
+          <li class="principle" data-reveal>
+            <span class="principle__node" aria-hidden="true" />
+            <span class="label principle__index">{`P.${String(i + 1).padStart(2, '0')}`}</span>
+            <h3 class="h4 principle__title">{p.title}</h3>
+            <p class="body principle__text">{p.text}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  .approach__head {
+    row-gap: 40px;
+    margin-bottom: clamp(56px, 7vw, 120px);
+  }
+
+  .approach__title {
+    grid-column: 1 / span 6;
+    display: grid;
+    gap: 28px;
+    align-content: start;
+  }
+
+  .approach__studio {
+    grid-column: 7 / -1;
+    align-self: end;
+    font-size: clamp(1.25rem, 0.9rem + 1.1vw, 2rem);
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+    font-weight: 450;
+    text-wrap: pretty;
+  }
+
+  .principles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-top: var(--hairline) solid var(--line-strong);
+  }
+
+  .principle {
+    position: relative;
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    grid-template-areas: 'idx title' 'idx text';
+    gap: 14px 24px;
+    padding: clamp(32px, 4vw, 56px) clamp(16px, 3vw, 48px) clamp(32px, 4vw, 56px) 0;
+    border-bottom: var(--hairline) solid var(--line-strong);
+  }
+
+  .principle:nth-child(even) {
+    padding-left: clamp(16px, 3vw, 48px);
+    border-left: var(--hairline) solid var(--line-strong);
+  }
+
+  /* Узел на пересечении линий — как коралловый стык в K */
+  .principle__node {
+    position: absolute;
+    left: -5px;
+    bottom: -5px;
+    width: 9px;
+    height: 9px;
+    background: var(--bg);
+    border: var(--hairline) solid var(--fg);
+  }
+
+  .principle:nth-child(odd) .principle__node {
+    left: auto;
+    right: -5px;
+    display: none;
+  }
+
+  .principle:nth-child(even) .principle__node {
+    background: var(--coral);
+    border-color: var(--coral);
+  }
+
+  .principle__index {
+    grid-area: idx;
+    padding-top: 0.5em;
+    color: var(--accent);
+  }
+
+  .principle__title {
+    grid-area: title;
+  }
+
+  .principle__text {
+    grid-area: text;
+  }
+
+  @media (max-width: 1023px) {
+    .approach__title,
+    .approach__studio {
+      grid-column: 1 / -1;
+    }
+
+    .principles {
+      grid-template-columns: 1fr;
+    }
+
+    .principle:nth-child(even) {
+      padding-left: 0;
+      border-left: 0;
+    }
+
+    .principle__node {
+      display: none;
+    }
+  }
+
+  @media (max-width: 559px) {
+    .principle {
+      grid-template-columns: 1fr;
+      grid-template-areas: 'idx' 'title' 'text';
+      gap: 10px;
+    }
+  }
+</style>

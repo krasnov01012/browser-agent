@@ -1,0 +1,25 @@
+---
+interface Props {
+  dir?: 'ne' | 'e' | 'down' | 'w';
+  class?: string;
+}
+const { dir = 'ne', class: className } = Astro.props;
+const paths = {
+  ne: 'M4 12 L12 4 M5.5 4 H12 V10.5',
+  e: 'M2 8 H14 M9 3 L14 8 L9 13',
+  down: 'M8 2 V14 M3 9 L8 14 L13 9',
+  w: 'M14 8 H2 M7 3 L2 8 L7 13',
+};
+---
+
+<svg
+  class:list={['btn__arrow', dir === 'down' && 'btn__arrow--down', className]}
+  viewBox="0 0 16 16"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.6"
+  stroke-linecap="square"
+  aria-hidden="true"
+>
+  <path d={paths[dir]}></path>
+</svg>

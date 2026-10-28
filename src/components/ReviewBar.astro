@@ -1,0 +1,12 @@
+---
+import { t, type Locale } from '@/i18n';
+interface Props {
+  locale: Locale;
+}
+const dict = t(Astro.props.locale);
+---
+
+<aside class="review-bar" aria-label={dict.review.on}>
+  <strong>{dict.review.on}</strong> · ?review<br />
+  {dict.review.legend}
+</aside>

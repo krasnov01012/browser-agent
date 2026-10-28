@@ -295,7 +295,6 @@ ol {
 }
 
 .lead {
-  hyphens: auto;
   font-size: var(--fs-lead);
   line-height: 1.45;
   letter-spacing: -0.01em;
@@ -305,7 +304,6 @@ ol {
 }
 
 .body {
-  hyphens: auto;
   color: var(--fg-muted);
   text-wrap: pretty;
   max-width: 40em;
@@ -439,6 +437,13 @@ ol {
 
 .btn:hover .btn__arrow--down {
   transform: translateY(3px);
+}
+
+/* Переносы — только в мелком тексте узких колонок телефона; в лидах и заголовках — никогда */
+@media (max-width: 559px) {
+  .body {
+    hyphens: auto;
+  }
 }
 
 @media (max-width: 400px) {

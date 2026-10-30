@@ -12,11 +12,13 @@ nvm use            # Node 24 LTS (Astro 7 требует ≥ 22.23.4)
 npm install
 npm run dev        # http://localhost:4321/ru/  ·  /en/
 npm run build && npm run preview
+npm run qa         # сборка + проверки текста и интерактива (нужен Playwright, см. CLAUDE.md §5)
 npm run qa:shots   # визуальная проверка → qa/
 ```
 
 Добавьте `?review` к адресу, чтобы увидеть статусы контента (черновик / предложение / плейсхолдер).
 
+- Контекст для новой сессии (история, грабли, превью, приоритеты) — [`docs/HANDOFF.md`](docs/HANDOFF.md)
 - Инструкции для AI-агентов и правила проекта — [`CLAUDE.md`](CLAUDE.md)
 - Что сделано и что ждёт материалов — [`docs/STATUS.md`](docs/STATUS.md)
 - Вопросы к обсуждению — [`docs/OPEN_QUESTIONS.md`](docs/OPEN_QUESTIONS.md)

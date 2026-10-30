@@ -4,6 +4,10 @@
 Это переработанный `AGENTS.md` из приватного хэндоффа (29.10.2026) + правила, появившиеся
 при реализации. Прочитай целиком **до** изменения файлов.
 
+> **Новая сессия? Сначала `docs/HANDOFF.md`** — история работы, предпочтения владельца,
+> собранные грабли окружения, процедура обновления превью и приоритеты на следующий шаг.
+> Работа идёт в ветке `krasnoff-site`; `main` пока содержит старый проект (не трогать без решения владельца).
+
 ---
 
 ## 1. Что это
@@ -81,6 +85,7 @@ AI и автоматизация, интеграции данных, инфра�
 | Стили | собственный CSS на токенах, scoped-стили Astro | никакого Tailwind-шаблона; токены — `src/styles/tokens.css` |
 | Шрифты | Geist Variable + IBM Plex Mono (self-hosted, OFL) | `[PROPOSED]`, кириллица проверена |
 | Node | ≥ 22.23.4 (см. `.nvmrc` = 24) | требование Astro 7 |
+| QA | Playwright (Chromium) — **не** в `package.json` | в облаке предустановлен; локально: `npm i -D playwright && npx playwright install chromium` (HANDOFF §6.2) |
 
 Новые зависимости — только с записью в `docs/DECISIONS.md`. Анимационные библиотеки (GSAP и т.п.)
 не подключены сознательно: всё движение — CSS, scroll-driven animations и небольшие утилиты в `src/scripts/motion.ts`.
@@ -107,8 +112,10 @@ src/
   styles/          tokens.css · base.css · chrome.css
   pages/           index.astro (выбор языка) · [lang]/index · [lang]/work/{seshat,mark} · [lang]/privacy · 404
 design/k-v02/      рабочие SVG/GLB/geometry.json знака v02 (v01 — устарел, не использовать)
-docs/              brief/ (санитизированный бриф) · DECISIONS.md · OPEN_QUESTIONS.md · STATUS.md
+docs/              HANDOFF.md (контекст сессий) · STATUS.md · OPEN_QUESTIONS.md · DECISIONS.md · brief/ (санитизированный бриф)
 scripts/           qa-screenshots · qa-interact · qa-text-fit · render-k-assets · serve-dist (Playwright, без демонов)
+                   stage-artifact.py — копия dist/ с относительными путями для превью-артефакта claude.ai
+public/            favicon, robots.txt (индексация закрыта), media/k (пререндер K, apple-touch-icon), media/og
 ```
 
 ## 7. Команды
@@ -126,7 +133,12 @@ npm run qa:shots       # кадры страниц 1440/1280/768/390 + пере�
 QA_REDUCED=1 npm run qa:shots    # то же с prefers-reduced-motion
 node scripts/qa-screenshots.mjs /en/work/mark/ 390   # одна страница/ширина
 npm run assets:k       # перерендер постера K, OG-картинки и apple-touch-icon из 3D-сцены
+                       # затем k-render.png → k-render.webp (команда — в шапке скрипта)
+python3 -I scripts/stage-artifact.py dist <папка>   # подготовить превью-артефакт (HANDOFF §7)
 ```
+
+Грабли окружения (демон `astro preview`, fullPage-скриншоты > 8k px, scoped-стили и дочерние
+компоненты, блокировка сайтов-референсов сетью облака и др.) — `docs/HANDOFF.md` §6.
 
 Переменные окружения — `.env.example` (`SITE_URL`, `PUBLIC_LEADS_ENDPOINT`).
 Без `PUBLIC_LEADS_ENDPOINT` форма **не изображает успех**: показывает, что приём не подключён.
@@ -149,12 +161,13 @@ npm run assets:k       # перерендер постера K, OG-картин�
 
 ## 9. Как работать (обязательный цикл)
 
-1. Прочитай `docs/STATUS.md` и `docs/OPEN_QUESTIONS.md` — что сделано и что ждёт решения.
+1. Прочитай `docs/HANDOFF.md`, `docs/STATUS.md` и `docs/OPEN_QUESTIONS.md` — что сделано и что ждёт решения.
 2. Сделай ограниченный шаг (одна секция / одна страница).
 3. `npm run qa` (должно быть зелёным), затем `npm run qa:shots` — **посмотри кадры** 1440 и 390
    (и 768), проверь переполнение = 0 и пустую колонку ошибок. Проверь режим reduced-motion.
 4. Сравни с критериями: `docs/brief/02_DESIGN_SYSTEM.md` (рубрика 0–5, анти-паттерны).
-5. Обнови `docs/STATUS.md`; новые нерешённые вопросы — в `docs/OPEN_QUESTIONS.md`.
+5. Обнови `docs/STATUS.md`; новые нерешённые вопросы — в `docs/OPEN_QUESTIONS.md`;
+   в конце сессии — историю и грабли в `docs/HANDOFF.md`, чтобы следующая сессия начала с контекстом.
 6. Не объявляй готовым то, что проверено только сборкой: нужен реальный рендер.
 
 ## 10. Чего не делать

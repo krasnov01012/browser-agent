@@ -39,7 +39,7 @@ export const en: Dict = {
     capabilitiesLabel: 'Capabilities',
     kAlt: 'Architectural K — the Krasnoff Development mark: a vertical stem and two diagonal beams with a coral seam at the joint.',
     hud: {
-      model: 'K / V02',
+      model: 'K / V03 · MODULAR',
       assembly: 'Assembly',
       tilt: 'Tilt',
       fallback: 'Static mark',

@@ -39,7 +39,7 @@ export const ru = {
     capabilitiesLabel: 'Направления',
     kAlt: 'Архитектурная K — фирменный знак Krasnoff Development: вертикальная опора и две диагональные балки с коралловым швом в узле соединения.',
     hud: {
-      model: 'K / V02',
+      model: 'K / V03 · MODULAR',
       assembly: 'Сборка',
       tilt: 'Наклон',
       fallback: 'Статичный знак',

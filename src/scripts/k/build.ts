@@ -1,63 +1,52 @@
 /*
- * Модель Architectural K для сцены: полая рама опоры с внутренней механикой, рамные балки с фасетками,
- * узел с болтами и коралловым свечением. Силуэт точно совпадает с контурами v02 (geometry.json),
- * но детали собраны как «инженерный объект», а не плоская призма — как на утверждённом концепте.
- *
- * Сборка: каждая деталь стартует рассыпанной (контур-чертёж → выравнивание → сборка → фиксация → свет),
- * окна детали заданы в секундах хореографии (0–7 с, см. scene.ts).
+ * Модель «Modular K» (v03): семь металлических модулей с реальными щелями, свет из щелей и световые
+ * вставки балок, обводка-«трассировка» при включении, строительные линии и пролетающие детали.
+ * Геометрия — modular.ts. Хореография повторяет ролик владельца (см. scene.ts):
+ *   модули влетают из-за камеры → зависают «взрыв-схемой» под строительными линиями → стыкуются →
+ *   по контурам пробегает свет → остаются светящиеся щели.
  */
 import {
   AdditiveBlending,
-  CircleGeometry,
+  BoxGeometry,
+  BufferGeometry,
   Color,
-  CylinderGeometry,
   EdgesGeometry,
   Euler,
   ExtrudeGeometry,
   Float32BufferAttribute,
   Group,
+  Line,
   LineBasicMaterial,
+  LineLoop,
   LineSegments,
   Mesh,
   MeshBasicMaterial,
   MeshPhysicalMaterial,
-  Path,
   PlaneGeometry,
   Shape,
   Texture,
   Vector2,
   Vector3,
 } from 'three';
-import { contours, joint, seams, toWorld } from './geometry';
-import { brushedRoughness, lineGlow, radialGlow } from './textures';
+import { toWorld } from './geometry';
+import { constructionLines, gapSeams, inlays, modules, nodePoint, type ModuleDef } from './modular';
+import { bandGlow, radialGlow, scratchedMetal } from './textures';
 import type { Vec2 } from './types';
 import { ease, range } from '../motion';
 
 export const CORAL = new Color('#ff6548');
+const HOT = new Color('#ffc4a3');
 
-/** Параметры, которыми сцена настраивает экземпляр (основной или зеркальный). */
 export interface BuildOptions {
-  /** Зеркальное отражение на полу: темнее, без блеска и огней. */
+  /** Зеркальное отражение на полу: темнее, без строительных линий и пролетающих деталей. */
   ghost: boolean;
-}
-
-interface Part {
-  mesh: Mesh;
-  material: MeshPhysicalMaterial;
-  rest: Vector3;
-  from: Vector3;
-  spin: Vector3;
-  window: [number, number];
-  outline: LineSegments;
-  accent: boolean;
 }
 
 export interface KModel {
   root: Group;
-  /** Состояние модели в момент t хореографии (секунды). */
   apply(t: number): void;
-  /** Свет узла для сцены (в экземпляре-призраке null). */
-  lights: { joint: Vec2; diamond: Vec2 } | null;
+  /** Точки для коралловых источников света (в координатах модели); у отражения — null. */
+  lights: { node: Vec2; spill: Vec2[] } | null;
 }
 
 // — Вспомогательное —
@@ -72,35 +61,11 @@ function rng(seed: number): () => number {
   };
 }
 
-/** Сдвиг выпуклого многоугольника внутрь на d (пересечение смещённых прямых). */
-function inset(pts: Vec2[], d: number): Vec2[] {
-  const n = pts.length;
-  let area = 0;
-  pts.forEach((p, i) => {
-    const q = pts[(i + 1) % n]!;
-    area += p[0] * q[1] - q[0] * p[1];
-  });
-  const sign = area > 0 ? 1 : -1;
-  const lines = pts.map((p, i) => {
-    const q = pts[(i + 1) % n]!;
-    const dx = q[0] - p[0];
-    const dy = q[1] - p[1];
-    const len = Math.hypot(dx, dy);
-    return { px: p[0] + ((-dy / len) * sign) * d, py: p[1] + ((dx / len) * sign) * d, dx, dy };
-  });
-  return pts.map((_, i) => {
-    const a = lines[(i - 1 + n) % n]!;
-    const b = lines[i]!;
-    const det = a.dx * b.dy - a.dy * b.dx;
-    const t = ((b.px - a.px) * b.dy - (b.py - a.py) * b.dx) / det;
-    return [a.px + a.dx * t, a.py + a.dy * t] as Vec2;
-  });
-}
+const W = (p: Vec2): Vec2 => toWorld(p);
 
-/** Плита по контуру (в мировых координатах) с фасками; центрирована по z на 0. */
-function slab(outer: Vec2[], thickness: number, bevel: number, hole?: Vec2[]): ExtrudeGeometry {
-  const shape = new Shape(outer.map((p) => new Vector2(p[0], p[1])));
-  if (hole) shape.holes.push(new Path(hole.map((p) => new Vector2(p[0], p[1]))));
+/** Плита по контуру с плоской фаской (как фрезерованная кромка); центрирована по z. */
+function slab(points: Vec2[], thickness: number, bevel = 0.026): ExtrudeGeometry {
+  const shape = new Shape(points.map((p) => new Vector2(p[0], p[1])));
   const bt = Math.min(bevel, thickness / 2 - 0.002);
   const geo = new ExtrudeGeometry(shape, {
     depth: thickness - bt * 2,
@@ -108,7 +73,7 @@ function slab(outer: Vec2[], thickness: number, bevel: number, hole?: Vec2[]): E
     bevelThickness: bt,
     bevelSize: bevel,
     bevelOffset: -bevel,
-    bevelSegments: 3,
+    bevelSegments: 1,
     curveSegments: 1,
   });
   geo.translate(0, 0, -(thickness / 2 - bt));
@@ -116,78 +81,104 @@ function slab(outer: Vec2[], thickness: number, bevel: number, hole?: Vec2[]): E
   return geo;
 }
 
-const rect = (x0: number, y0: number, x1: number, y1: number): Vec2[] => [
-  [x0, y0],
-  [x1, y0],
-  [x1, y1],
-  [x0, y1],
-];
-
-/** Вершинное затемнение к узлу (окклюзия в стыке) — множитель к цвету материала. */
-function shade(geo: ExtrudeGeometry | CylinderGeometry): void {
-  const [jx, jy] = toWorld(joint);
+/** Мягкое затемнение к узлу (окклюзия в стыке): множитель цвета 0.7–1. */
+function shade(geo: BufferGeometry): void {
+  const [nx, ny] = W(nodePoint);
   const pos = geo.getAttribute('position');
   const colors = new Float32Array(pos.count * 3);
   for (let i = 0; i < pos.count; i++) {
-    const d = Math.hypot(pos.getX(i) - jx, pos.getY(i) - jy);
-    const t = Math.min(1, d / 3.6);
-    const v = 0.42 + 0.58 * t * t * (3 - 2 * t);
+    const t = Math.min(1, Math.hypot(pos.getX(i) - nx, pos.getY(i) - ny) / 3);
+    const v = 0.7 + 0.3 * t * t * (3 - 2 * t);
     colors[i * 3] = colors[i * 3 + 1] = colors[i * 3 + 2] = v;
   }
   geo.setAttribute('color', new Float32BufferAttribute(colors, 3));
 }
 
-const mapCache = new Map<string, Texture>();
-let roughBase: Texture | null = null;
+let metalMaps: ReturnType<typeof scratchedMetal> | null = null;
+const mapClones = new Map<string, Texture[]>();
 
-function metal(angle: number, tint: string, roughness: number, ghost: boolean): MeshPhysicalMaterial {
-  roughBase ??= brushedRoughness();
+/** Матовый потёртый металл. Карты общие, у каждого направления шлифовки — свой поворот UV. */
+function metal(angle: number, tint: string, ghost: boolean): MeshPhysicalMaterial {
+  metalMaps ??= scratchedMetal();
   const key = angle.toFixed(2);
-  let map = mapCache.get(key);
-  if (!map) {
-    map = roughBase.clone();
-    map.needsUpdate = true;
-    map.center.set(0.5, 0.5);
-    map.rotation = angle;
-    map.repeat.set(2.4, 2.4);
-    mapCache.set(key, map);
+  let maps = mapClones.get(key);
+  if (!maps) {
+    maps = [metalMaps.map, metalMaps.roughness, metalMaps.bump].map((src) => {
+      const t = src.clone();
+      t.needsUpdate = true;
+      t.repeat.set(0.42, 0.42);
+      t.rotation = angle;
+      return t;
+    });
+    mapClones.set(key, maps);
   }
   const c = new Color(tint);
-  if (ghost) c.multiplyScalar(0.55);
-  // Матовый шлифованный металл: высокая шероховатость, без лака, мелкий рельеф рисок и приглушённое окружение.
+  if (ghost) c.multiplyScalar(0.5);
   return new MeshPhysicalMaterial({
     color: c,
+    map: maps[0]!,
     vertexColors: true,
     metalness: 1,
-    roughness,
-    roughnessMap: map,
-    bumpMap: ghost ? null : map,
-    bumpScale: 0.9,
-    anisotropy: ghost ? 0 : 0.35,
-    anisotropyRotation: angle,
-    clearcoat: 0,
-    envMapIntensity: ghost ? 0.6 : 0.85,
+    roughness: 1,
+    roughnessMap: maps[1]!,
+    bumpMap: ghost ? null : maps[2]!,
+    bumpScale: 1.2,
+    envMapIntensity: ghost ? 0.55 : 1.05,
   });
 }
 
-/** Оранжевый ромб: собственное свечение (emissiveIntensity растёт при «фиксации»). */
-function diamondMaterial(): MeshPhysicalMaterial {
-  return new MeshPhysicalMaterial({ color: CORAL.clone().multiplyScalar(0.55), emissive: CORAL, emissiveIntensity: 0, metalness: 0.3, roughness: 0.5 });
+/** Светящаяся линия-ломаная: ядро + ореол по каждому отрезку, прорисовывается по длине. */
+class GlowPath {
+  readonly group = new Group();
+  private segs: { pivot: Group; core: MeshBasicMaterial; halo: MeshBasicMaterial; len: number; start: number }[] = [];
+  private total = 0;
+
+  constructor(points: Vec2[], z: number, opts: { core: number; halo: number; haloZ?: number; tex: Texture; closed?: boolean }) {
+    const pts = opts.closed ? [...points, points[0]!] : points;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const [ax, ay] = pts[i]!;
+      const [bx, by] = pts[i + 1]!;
+      const len = Math.hypot(bx - ax, by - ay);
+      const pivot = new Group();
+      pivot.position.set(ax, ay, z);
+      pivot.rotation.z = Math.atan2(by - ay, bx - ax);
+      // Ядро «горячее» (почти белое с оранжевым), ореол — фирменный коралл: так светится щель в ролике
+      const core = new MeshBasicMaterial({ color: HOT, transparent: true, opacity: 0, toneMapped: false, depthWrite: false });
+      const halo = new MeshBasicMaterial({ map: opts.tex, color: CORAL, transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false, toneMapped: false });
+      pivot.add(new Mesh(new PlaneGeometry(len + opts.core, opts.core).translate(len / 2, 0, 0), core));
+      const haloMesh = new Mesh(new PlaneGeometry(len + opts.halo * 0.6, opts.halo).translate(len / 2, 0, (opts.haloZ ?? z) - z), halo);
+      haloMesh.renderOrder = 4;
+      pivot.add(haloMesh);
+      this.group.add(pivot);
+      this.segs.push({ pivot, core, halo, len, start: this.total });
+      this.total += len;
+    }
+  }
+
+  /** progress 0..1 — прорисовано по длине; intensity — общая яркость. */
+  set(progress: number, intensity: number, haloK = 0.75): void {
+    const head = progress * this.total;
+    for (const s of this.segs) {
+      const local = Math.min(1, Math.max(0, (head - s.start) / s.len));
+      s.pivot.visible = local > 0 && intensity > 0.001;
+      s.pivot.scale.x = Math.max(0.0001, local);
+      s.core.opacity = intensity;
+      s.halo.opacity = intensity * haloK;
+    }
+  }
 }
 
-/** Точка на «ленте» между двумя длинными сторонами четырёхугольника (A по P1→P2, B по P0→P3). */
-function lerp2(a: Vec2, b: Vec2, t: number): Vec2 {
-  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
-}
-
-/** Фасетка на балке: четырёхугольник между сечениями t0..t1 по длине. q = [A0, A1, B1, B0]-контур. */
-function facet(q: [Vec2, Vec2, Vec2, Vec2], t0: number, t1: number): Vec2[] {
-  // q[0]-q[1] — сторона A (начало→конец), q[3]-q[2] — сторона B
-  const a0 = lerp2(q[0], q[1], t0);
-  const a1 = lerp2(q[0], q[1], t1);
-  const b0 = lerp2(q[3], q[2], t0);
-  const b1 = lerp2(q[3], q[2], t1);
-  return [a0, a1, b1, b0];
+interface Part {
+  mesh: Mesh;
+  material: MeshPhysicalMaterial;
+  rest: Vector3;
+  from: Vector3;
+  exploded: Vector3;
+  spin: Vector3;
+  tilt: Vector3;
+  /** [появление, «взрыв-схема», начало стыковки, конец стыковки] */
+  t: [number, number, number, number];
+  edges: LineSegments;
 }
 
 // — Сборка модели —
@@ -195,192 +186,154 @@ function facet(q: [Vec2, Vec2, Vec2, Vec2], t0: number, t1: number): Vec2[] {
 export function buildK({ ghost }: BuildOptions): KModel {
   const root = new Group();
   const random = rng(20261102);
-  const parts: Part[] = [];
   const gk = ghost ? 0.4 : 1;
-  const glowTex = lineGlow();
-  const radial = radialGlow();
+  const band = bandGlow();
+  const parts: Part[] = [];
+  const front = new Map<ModuleDef['id'], number>();
 
-  const dark = (angle: number) => metal(angle, '#b6bac1', 0.66, ghost);
-  const steel = (angle: number, tone = '#e2e3e2') => metal(angle, tone, 0.58, ghost);
-
-  /** Добавляет деталь: геометрия строится в мировых координатах, затем центрируется для вращения «на месте». */
-  function add(
-    geo: ExtrudeGeometry | CylinderGeometry,
-    material: MeshPhysicalMaterial,
-    window: [number, number],
-    scatter: number,
-    opts: { accent?: boolean; offset?: [number, number, number] } = {},
-  ): Mesh {
-    const o = opts.offset ?? [0, 0, 0];
-    geo.translate(o[0], o[1], o[2]);
+  // ═══ Модули ═══
+  modules.forEach((m, i) => {
+    const pts = m.points.map(W);
+    const geo = slab(pts, m.depth);
     shade(geo);
     geo.computeBoundingBox();
     const c = geo.boundingBox!.getCenter(new Vector3());
     geo.translate(-c.x, -c.y, -c.z);
+    const material = metal(m.brush, m.id.startsWith('A') ? '#dcdddf' : '#d2d4d6', ghost);
     const mesh = new Mesh(geo, material);
     mesh.position.copy(c);
-    const dir = new Vector3(random() * 2 - 0.6, random() * 2 - 1, random() * 1.6 - 1.2).normalize();
-    const from = dir.multiplyScalar(scatter * (0.7 + random() * 0.6));
-    const spin = new Vector3((random() - 0.5) * 2.4, (random() - 0.5) * 2.4, (random() - 0.5) * 2.0).multiplyScalar(Math.min(1, scatter / 2.2));
-    const outline = new LineSegments(
-      new EdgesGeometry(geo, 25),
-      new LineBasicMaterial({ color: opts.accent ? CORAL : 0xf3f0e9, transparent: true, opacity: 0, depthWrite: false }),
-    );
-    mesh.add(outline);
     root.add(mesh);
-    parts.push({ mesh, material, rest: c.clone(), from, spin, window, outline, accent: !!opts.accent });
-    return mesh;
-  }
+    front.set(m.id, m.depth / 2);
 
-  // ═══ Опора: цельный брус с фрезерованной панелью и светящимся ромбом ═══
-  const [sx0] = toWorld(contours.stem[0]);
-  const [sx1] = toWorld(contours.stem[1]);
-  const [, syTop] = toWorld(contours.stem[0]);
-  const [, syBot] = toWorld(contours.stem[2]);
-  const sw = sx1 - sx0;
-  const cx = (sx0 + sx1) / 2;
-  const stemD = 0.78;
-  const vert = Math.PI / 2;
-  void sw;
-
-  add(slab(rect(sx0, syBot, sx1, syTop), stemD, 0.036), steel(vert), [0.3, 2.6], 1.6);
-  // Накладная панель по лицу опоры: ступенька и фаски читаются как обработанная деталь
-  add(slab(rect(sx0 + 0.09, syBot + 0.2, sx1 - 0.09, syTop - 0.2), 0.05, 0.014), dark(vert), [0.6, 3.0], 2.2, { offset: [0, 0, stemD / 2 + 0.012] });
-
-  // Ромб по центру опоры: оранжевый, светится (эмиссия включается при «фиксации»)
-  const diamond: Vec2[] = [
-    [cx, 0.42],
-    [cx + 0.2, 0],
-    [cx, -0.42],
-    [cx - 0.2, 0],
-  ];
-  const diamondMesh = add(slab(diamond, 0.08, 0.016), diamondMaterial(), [2.5, 4.3], 3.0, { accent: true, offset: [0, 0, stemD / 2 + 0.05] });
-
-  // ═══ Нижняя балка: массивная плита с фасетками ═══
-  const lowerPts = contours.lower.map(toWorld) as Vec2[];
-  const lowerIn = inset(lowerPts, 0.07);
-  const lowerAngle = Math.atan2(lowerPts[2]![1] - lowerPts[1]![1], lowerPts[2]![0] - lowerPts[1]![0]);
-  const lowerT = 0.62;
-  const lowerZ = 0.06;
-  add(slab(lowerPts, lowerT, 0.034), steel(-lowerAngle), [1.0, 3.5], 2.2, { offset: [0, 0, lowerZ] });
-  const lq: [Vec2, Vec2, Vec2, Vec2] = [lowerIn[1]!, lowerIn[2]!, lowerIn[3]!, lowerIn[0]!];
-  add(slab(facet(lq, 0.1, 0.55), 0.1, 0.02), steel(lowerAngle, '#f0f0ee'), [2.3, 4.2], 2.8, { offset: [0, 0, lowerZ + lowerT / 2 + 0.03] });
-  add(slab(facet(lq, 0.62, 0.98), 0.1, 0.02), dark(lowerAngle), [2.5, 4.4], 2.8, { offset: [0, 0, lowerZ + lowerT / 2 + 0.03] });
-
-  // ═══ Верхняя балка: цельная плита с накладными фасетками ═══
-  const upperPts = contours.upper.map(toWorld) as Vec2[];
-  const upperIn = inset(upperPts, 0.075);
-  const upperAngle = Math.atan2(upperPts[1]![1] - upperPts[0]![1], upperPts[1]![0] - upperPts[0]![0]);
-  const upperT = 0.46;
-  const upperZ = -0.06;
-  add(slab(upperPts, upperT, 0.032), steel(upperAngle), [1.4, 3.9], 2.2, { offset: [0, 0, upperZ] });
-  // Контур upper: A = P0→P1 (внешняя сторона), B = P3→P2 (внутренняя)
-  const uq: [Vec2, Vec2, Vec2, Vec2] = [upperIn[0]!, upperIn[1]!, upperIn[2]!, upperIn[3]!];
-  add(slab(facet(uq, 0.1, 0.52), 0.1, 0.02), steel(upperAngle, '#f0f0ee'), [2.1, 4.1], 2.8, { offset: [0, 0, upperZ + upperT / 2 + 0.03] });
-  add(slab(facet(uq, 0.6, 0.97), 0.1, 0.02), dark(-upperAngle), [2.3, 4.3], 2.8, { offset: [0, 0, upperZ + upperT / 2 + 0.03] });
-
-  // ═══ Крепёж на лице опоры ═══
-  const bolt = (x: number, y: number, z: number, win: [number, number]) => {
-    const g = new CylinderGeometry(0.042, 0.042, 0.035, 6);
-    g.rotateX(vert);
-    add(g, steel(0, '#cfd2d6'), win, 3.4, { offset: [x, y, z] });
-  };
-  let bw = 2.6;
-  for (const y of [-2.0, -1.2, 1.2, 2.0]) {
-    bolt(sx0 + 0.045, y, stemD / 2 + 0.01, [bw, bw + 1.5]);
-    bolt(sx1 - 0.045, y, stemD / 2 + 0.01, [bw + 0.15, bw + 1.65]);
-    bw += 0.12;
-  }
-
-  // ═══ Свет: швы, узел ═══
-  const upperFront = upperZ + upperT / 2 + 0.006;
-  const lowerFront = lowerZ + lowerT / 2 + 0.006;
-  const stemFront = stemD / 2 + 0.006;
-  const seamDefs: { a: Vec2; b: Vec2; z: number; k: number }[] = [
-    { a: seams.upper[0], b: seams.upper[1], z: upperFront, k: 1 },
-    { a: seams.lower[0], b: seams.lower[1], z: lowerFront, k: 1 },
-    { a: seams.stemUp[0], b: seams.stemUp[1], z: stemFront, k: 0.7 },
-    { a: seams.stemDown[0], b: seams.stemDown[1], z: stemFront, k: 0.7 },
-  ];
-  const seamParts: { pivot: Group; core: Mesh; halo: Mesh; k: number }[] = seamDefs.map(({ a, b, z, k }) => {
-    const [ax, ay] = toWorld(a);
-    const [bx, by] = toWorld(b);
-    const len = Math.hypot(bx - ax, by - ay);
-    const pivot = new Group();
-    pivot.position.set(ax, ay, z);
-    pivot.rotation.z = Math.atan2(by - ay, bx - ax);
-    const core = new Mesh(
-      new PlaneGeometry(len, 0.024).translate(len / 2, 0, 0),
-      new MeshBasicMaterial({ color: CORAL.clone().multiplyScalar(1.25), toneMapped: false, transparent: true, opacity: 0 }),
+    // Влёт из-за камеры: с края кадра и «перед» знаком, с сильным вращением
+    const side = c.x >= 0 ? 1 : -1;
+    const from = new Vector3(side * (1.4 + random() * 1.4), (random() - 0.5) * 3.2, 2.5 + random() * 2);
+    // «Взрыв-схема»: модули зависают чуть отодвинутыми от центра и выдвинутыми к камере
+    const exploded = new Vector3(c.x * 0.32 + (random() - 0.5) * 0.25, c.y * 0.3 + (random() - 0.5) * 0.25, 0.5 + random() * 0.6);
+    const spin = new Vector3((random() - 0.5) * 5, (random() - 0.5) * 5, (random() - 0.5) * 3);
+    const tilt = new Vector3((random() - 0.5) * 0.35, (random() - 0.5) * 0.5, (random() - 0.5) * 0.18);
+    const s = 0.25 + i * 0.13;
+    const c0 = 3.3 + i * 0.09;
+    const edges = new LineSegments(
+      new EdgesGeometry(geo, 25),
+      new LineBasicMaterial({ color: 0xf3f0e9, transparent: true, opacity: 0, depthWrite: false }),
     );
-    const halo = new Mesh(
-      new PlaneGeometry(len + 0.2, 0.56).translate(len / 2, 0, 0.003),
-      new MeshBasicMaterial({ map: glowTex, color: CORAL, transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false, toneMapped: false }),
-    );
-    pivot.add(core, halo);
-    root.add(pivot);
-    return { pivot, core, halo, k };
+    mesh.add(edges);
+    parts.push({ mesh, material, rest: c.clone(), from, exploded, spin, tilt, t: [s, 2.3 + i * 0.07, c0, c0 + 0.5], edges });
   });
 
-  // Ядро узла, ореол и горизонтальная вспышка
-  const [jx, jy] = toWorld(joint);
-  const core = new Mesh(new CircleGeometry(0.07, 40), new MeshBasicMaterial({ color: CORAL.clone().multiplyScalar(1.2), toneMapped: false, transparent: true, opacity: 0 }));
-  core.position.set(jx + 0.02, jy, lowerFront + 0.07);
-  const glow = new Mesh(
-    new PlaneGeometry(1.9, 1.9),
-    new MeshBasicMaterial({ map: radial, color: CORAL, transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false, toneMapped: false }),
-  );
-  glow.position.set(jx + 0.02, jy, lowerFront + 0.06);
-  const flare = new Mesh(
-    new PlaneGeometry(4.2, 0.5),
-    new MeshBasicMaterial({ map: radial, color: new Color('#ff9a80'), transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false, toneMapped: false }),
-  );
-  flare.position.set(jx + 0.4, jy, lowerFront + 0.065);
-  root.add(core, glow, flare);
+  // ═══ Свет: щели опоры (изнутри), вставки балок (на лицевой стороне), обводка модулей ═══
+  const stemFront = 0.31;
+  const gaps = gapSeams.map((p) => new GlowPath(p.map(W), 0.1, { core: 0.022, halo: 0.17, haloZ: stemFront + 0.02, tex: band }));
+  const inlayPaths = inlays.map(({ id, points }) => new GlowPath(points.map(W), front.get(id)! + 0.004, { core: 0.018, halo: 0.16, tex: band }));
+  const outlines = modules.map((m) => new GlowPath(m.points.map(W), m.depth / 2 + 0.006, { core: 0.014, halo: 0.14, tex: band, closed: true }));
+  for (const g of [...gaps, ...inlayPaths, ...outlines]) root.add(g.group);
 
-  // Ореол ромба на лице опоры
-  const diaGlow = new Mesh(
-    new PlaneGeometry(1.7, 2.4),
-    new MeshBasicMaterial({ map: radial, color: CORAL, transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false, toneMapped: false }),
+  // Узел: мягкое свечение в пазу между балками
+  const [nx, ny] = W(nodePoint);
+  const nodeGlow = new Mesh(
+    new PlaneGeometry(1.5, 1.1),
+    new MeshBasicMaterial({ map: radialGlow(), color: CORAL, transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false, toneMapped: false }),
   );
-  diaGlow.position.set(cx, 0, stemD / 2 + 0.11);
-  root.add(diaGlow);
-  const diamondPart = parts.find((p) => p.mesh === diamondMesh)!;
+  nodeGlow.position.set(nx, ny, 0.2);
+  root.add(nodeGlow);
 
-  const euler = new Euler();
-  function apply(t: number): void {
-    for (const p of parts) {
-      const q = ease.outQuint(range(t, p.window[0], p.window[1]));
-      const inv = 1 - q;
-      p.mesh.position.set(p.rest.x + p.from.x * inv, p.rest.y + p.from.y * inv, p.rest.z + p.from.z * inv);
-      euler.set(p.spin.x * inv, p.spin.y * inv, p.spin.z * inv);
-      p.mesh.rotation.copy(euler);
-      const fade = range(t, p.window[0], p.window[0] + 0.7);
-      p.material.transparent = fade < 1;
-      p.material.opacity = fade;
-      const line = p.outline.material as LineBasicMaterial;
-      const hold = p.accent ? 1 : 1 - ease.inOutCubic(range(t, 3.8, 5.2));
-      line.opacity = (p.accent ? 0.85 : 0.65) * range(t, p.window[0] - 0.25, p.window[0] + 0.4) * hold * gk;
+  // ═══ Строительные линии этапа «выравнивание» и пролетающие детали (только у основной модели) ═══
+  const lines: { obj: Line; mat: LineBasicMaterial; delay: number }[] = [];
+  const debris: { mesh: Mesh; a: Vector3; b: Vector3; spin: Vector3; t: [number, number] }[] = [];
+  let ring: LineLoop | null = null;
+  if (!ghost) {
+    constructionLines.forEach(([a, b], i) => {
+      const [ax, ay] = W(a);
+      const [bx, by] = W(b);
+      const geo = new BufferGeometry().setFromPoints([new Vector3(ax, ay, 0.36), new Vector3(bx, by, 0.36)]);
+      const mat = new LineBasicMaterial({ color: CORAL, transparent: true, opacity: 0, depthWrite: false });
+      const obj = new Line(geo, mat);
+      root.add(obj);
+      lines.push({ obj, mat, delay: i * 0.1 });
+    });
+    const pts: Vector3[] = [];
+    for (let i = 0; i < 128; i++) {
+      const a = (i / 128) * Math.PI * 2;
+      pts.push(new Vector3(nx + Math.cos(a) * 2.5, ny + Math.sin(a) * 2.5, 0.36));
     }
+    ring = new LineLoop(new BufferGeometry().setFromPoints(pts), new LineBasicMaterial({ color: 0x9aa0b4, transparent: true, opacity: 0, depthWrite: false }));
+    root.add(ring);
 
-    const ignite = ease.outCubic(range(t, 4.1, 5.0));
-    const draw = ease.inOutCubic(range(t, 4.3, 5.5));
-    const flicker = t < 5.2 ? 1 + Math.sin(t * 41) * 0.09 * (1 - ignite) : 1;
-    diamondPart.material.emissiveIntensity = 2.4 * ignite * (ghost ? 0.4 : 1);
-    (diaGlow.material as MeshBasicMaterial).opacity = ignite * 0.65 * flicker * gk;
-    (core.material as MeshBasicMaterial).opacity = ignite * gk;
-    core.scale.setScalar(0.4 + 0.6 * ignite);
-    (glow.material as MeshBasicMaterial).opacity = ignite * 0.8 * flicker * gk;
-    glow.scale.setScalar(0.6 + 0.4 * ignite + 0.35 * (1 - range(t, 4.5, 5.8)) * ignite);
-    (flare.material as MeshBasicMaterial).opacity = ignite * 0.4 * flicker * gk;
-    flare.scale.set(0.5 + 0.5 * ignite, 1, 1);
-    for (const s of seamParts) {
-      s.pivot.scale.set(Math.max(0.0001, draw), 1, 1);
-      (s.core.material as MeshBasicMaterial).opacity = range(t, 4.3, 4.6) * s.k * gk;
-      (s.halo.material as MeshBasicMaterial).opacity = 0.75 * draw * s.k * gk;
+    const debrisMat = metal(0, '#bfc1c4', false);
+    for (let i = 0; i < 14; i++) {
+      const sx = 0.06 + random() * 0.22;
+      const mesh = new Mesh(new BoxGeometry(sx, sx * (0.4 + random() * 2.4), 0.06 + random() * 0.2), debrisMat.clone());
+      shade(mesh.geometry);
+      const a = new Vector3((random() - 0.5) * 5, (random() - 0.5) * 3.6, 4 + random() * 2);
+      const b = new Vector3(a.x * 1.6 + (random() - 0.5) * 2, a.y * 1.6 + (random() - 0.5) * 2, -6 - random() * 4);
+      const s = 0.2 + random() * 1.6;
+      debris.push({ mesh, a, b, spin: new Vector3(random() * 6, random() * 6, random() * 4), t: [s, s + 1.4 + random() * 0.8] });
+      root.add(mesh);
     }
   }
 
-  return { root, apply, lights: ghost ? null : { joint: [jx, jy], diamond: [cx, 0] } };
-}
+  const euler = new Euler();
+  const tmp = new Vector3();
 
+  function apply(t: number): void {
+    // — Модули —
+    for (const p of parts) {
+      const [s, e, c0, c1] = p.t;
+      const fly = ease.outCubic(range(t, s, e));
+      const dock = ease.inOutCubic(range(t, c0, c1));
+      tmp.lerpVectors(p.from, p.exploded, fly);
+      // На «взрыв-схеме» модуль медленно дрейфует, пока не начнётся стыковка
+      tmp.z += 0.12 * Math.sin((t - s) * 1.3) * (1 - dock) * fly;
+      p.mesh.position.set(p.rest.x + tmp.x * (1 - dock), p.rest.y + tmp.y * (1 - dock), p.rest.z + tmp.z * (1 - dock));
+      const inv = 1 - fly;
+      euler.set(
+        (p.spin.x * inv + p.tilt.x * fly) * (1 - dock),
+        (p.spin.y * inv + p.tilt.y * fly) * (1 - dock),
+        (p.spin.z * inv + p.tilt.z * fly) * (1 - dock),
+      );
+      p.mesh.rotation.copy(euler);
+      const fade = range(t, s, s + 0.45);
+      p.material.transparent = fade < 1;
+      p.material.opacity = fade;
+      p.mesh.visible = fade > 0;
+      (p.edges.material as LineBasicMaterial).opacity = 0.45 * range(t, s, s + 0.3) * (1 - range(t, e - 0.6, e + 0.4)) * gk;
+    }
+
+    // — Строительные линии: прорисовка на «взрыв-схеме», уход при стыковке —
+    for (const l of lines) {
+      const draw = ease.outCubic(range(t, 2.1 + l.delay, 2.9 + l.delay));
+      l.obj.visible = draw > 0;
+      l.mat.opacity = 0.75 * draw * (1 - range(t, 4.2, 5.0));
+    }
+    if (ring) {
+      const draw = ease.inOutCubic(range(t, 2.2, 3.4));
+      ring.geometry.setDrawRange(0, Math.round(128 * draw));
+      (ring.material as LineBasicMaterial).opacity = 0.45 * (1 - range(t, 4.3, 5.1));
+    }
+
+    // — Пролетающие детали —
+    for (const d of debris) {
+      const k = range(t, d.t[0], d.t[1]);
+      d.mesh.visible = k > 0 && k < 1;
+      d.mesh.position.lerpVectors(d.a, d.b, ease.inOutCubic(k));
+      d.mesh.rotation.set(d.spin.x * k, d.spin.y * k, d.spin.z * k);
+      const m = d.mesh.material as MeshPhysicalMaterial;
+      m.transparent = true;
+      m.opacity = Math.min(range(k, 0, 0.15), 1 - range(k, 0.7, 1));
+    }
+
+    // — Свет: пробег по контурам → светящиеся щели —
+    const trace = ease.inOutCubic(range(t, 4.25, 5.15));
+    const traceFade = 1 - ease.inOutCubic(range(t, 5.3, 6.4));
+    for (const o of outlines) o.set(trace, 0.95 * traceFade * gk, 0.6);
+    const seam = ease.inOutCubic(range(t, 4.8, 5.8));
+    const flicker = t < 5.4 ? 1 + Math.sin(t * 43) * 0.08 * (1 - seam) : 1;
+    for (const g of gaps) g.set(seam, flicker * gk, 0.8);
+    for (const g of inlayPaths) g.set(seam, flicker * gk, 0.7);
+    (nodeGlow.material as MeshBasicMaterial).opacity = 0.55 * seam * flicker * gk;
+  }
+
+  const spill: Vec2[] = [W([600, 330]), W([560, 700]), W([343, 420]), W([230, 560])];
+  return { root, apply, lights: ghost ? null : { node: [nx, ny], spill } };
+}

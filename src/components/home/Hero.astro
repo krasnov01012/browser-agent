@@ -172,9 +172,16 @@ const geo = describe();
   }
 
   /* Отражение на полу плавно уходит в фон: пол лежит на ~69% высоты кадра. */
+  /* Края холста мягкие: модули, влетающие из-за камеры, не обрезаются жёсткой рамкой. */
   .k-stage__canvas {
-    -webkit-mask-image: linear-gradient(to bottom, #000 66%, rgba(0, 0, 0, 0.55) 78%, transparent 97%);
-    mask-image: linear-gradient(to bottom, #000 66%, rgba(0, 0, 0, 0.55) 78%, transparent 97%);
+    -webkit-mask-image:
+      linear-gradient(to bottom, transparent 0, #000 4%, #000 66%, rgba(0, 0, 0, 0.55) 78%, transparent 97%),
+      linear-gradient(to right, transparent 0, #000 7%, #000 93%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-image:
+      linear-gradient(to bottom, transparent 0, #000 4%, #000 66%, rgba(0, 0, 0, 0.55) 78%, transparent 97%),
+      linear-gradient(to right, transparent 0, #000 7%, #000 93%, transparent 100%);
+    mask-composite: intersect;
   }
 
   /* Новый знак стоит в ракурсе, поэтому плоские размерные метки и узлы чертежа под ним не показываем:

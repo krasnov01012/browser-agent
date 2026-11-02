@@ -1,5 +1,6 @@
 /*
- * Геометрия Architectural K v02.
+ * Геометрия Architectural K v02 — отображение toWorld() и параметры чертежа.
+ * 3D-знак с 02.11.2026 строится по «Modular K» v03 (modular.ts); контуры v02 остаются для чертежа и fallback-SVG.
  * Источник истины — design/k-v02/geometry.json (контуры в пространстве SVG 1000×1000).
  * Отображение в 3D — то же, что в architectural-k.glb: x' = (x − 500) / 165, y' = (500 − y) / 165.
  *

@@ -1,12 +1,13 @@
 /*
- * Three.js-сцена Architectural K: студия, сборка из деталей, коралловый узел, отражение на полу,
- * «тихая» реакция на курсор и прокрутку. Сама модель — build.ts.
+ * Three.js-сцена «Modular K»: студия, сборка из модулей, свет из щелей, отражение на полу,
+ * «тихая» реакция на курсор и прокрутку. Сама модель — build.ts, геометрия — modular.ts.
  *
- * Хореография (≈7 с, контент страницы доступен с первой миллисекунды):
- *   0.0–1.5 с  контур-чертёж деталей, рассыпанных в пространстве («узлы»)
- *   0.3–4.4 с  детали выравниваются и собираются: опора → нижняя балка → верхняя → мелкие узлы
- *   4.1–5.5 с  фиксация: загорается узел, швы прочерчиваются, отражение на полу
- *   4.6–7.0 с  блик проходит по металлу, знак встаёт в ракурс покоя
+ * Хореография (≈7 с по ролику владельца; контент страницы доступен с первой миллисекунды):
+ *   0.2–2.8 с  модули и мелкие детали влетают из-за камеры, вращаясь
+ *   2.1–3.4 с  «взрыв-схема»: модули зависают, прочерчиваются оранжевые строительные линии
+ *   3.3–4.3 с  стыковка модулей
+ *   4.25–5.2 с по контурам всех модулей пробегает свет
+ *   4.8–6.4 с  контуры гаснут, остаются светящиеся щели и вставки; знак встаёт в ракурс покоя
  * Покой: наклон за курсором ±4–5° с демпфированием, при прокрутке знак уходит вглубь.
  */
 import {
@@ -42,9 +43,9 @@ const DURATION = 7;
 /** Масштаб и вертикальный сдвиг знака в кадре: снизу остаётся место под отражение. */
 const SCALE = 0.86;
 const OFFSET_Y = 0.78;
-/** Ракурс покоя: чуть довёрнут влево, чтобы читались глубина рамы и толщина балок. */
-const REST_YAW = 0.36;
-const REST_PITCH = -0.02;
+/** Ракурс покоя (как в ролике): камера чуть справа и сверху — видны торцы модулей и толщина балок. */
+const REST_YAW = -0.22;
+const REST_PITCH = 0.07;
 
 /** Студийное окружение: тёмная комната, острые софтбоксы — контрастные блики на гранях. */
 function buildEnvironment(renderer: WebGLRenderer): Texture {
@@ -83,7 +84,6 @@ export class KScene {
   private main: KModel;
   private mirror: KModel;
   private jointLight: PointLight;
-  private diamondLight: PointLight;
   private spill: PointLight[] = [];
   private haze: Mesh;
   private floor: Mesh;
@@ -114,7 +114,7 @@ export class KScene {
 
     const key = new DirectionalLight(0xffffff, 1.5);
     key.position.set(-3, 5, 6);
-    const rim = new DirectionalLight(0xb7c4ff, 0.9);
+    const rim = new DirectionalLight(0xdfe3ea, 0.5);
     rim.position.set(6, 2, -4);
     this.scene.add(key, rim);
 
@@ -130,21 +130,14 @@ export class KScene {
     this.root.add(this.rig);
     this.scene.add(this.root);
 
-    // Огни узла и швов (только у основной модели)
-    const [jx, jy] = this.main.lights!.joint;
+    // Огни узла и щелей (только у основной модели): тёплый свет из стыков ложится на соседний металл
+    const { node, spill } = this.main.lights!;
     this.jointLight = new PointLight(CORAL, 0, 3.2, 2);
-    this.jointLight.position.set(jx + 0.35, jy, 0.9);
+    this.jointLight.position.set(node[0] + 0.25, node[1], 0.9);
     this.rig.add(this.jointLight);
-    const [dx, dy] = this.main.lights!.diamond;
-    this.diamondLight = new PointLight(CORAL, 0, 2.6, 2);
-    this.diamondLight.position.set(dx, dy, 1.0);
-    this.rig.add(this.diamondLight);
-    for (const [x, y] of [
-      [0.6, 0.7],
-      [0.6, -0.7],
-    ] as [number, number][]) {
-      const l = new PointLight(CORAL, 0, 3, 2);
-      l.position.set(jx + x, jy + y, 0.8);
+    for (const [x, y] of spill) {
+      const l = new PointLight(CORAL, 0, 3.2, 2);
+      l.position.set(x, y, 1.3);
       this.spill.push(l);
       this.rig.add(l);
     }
@@ -269,19 +262,19 @@ export class KScene {
     this.main.apply(t);
     this.mirror.apply(t);
 
-    const ignite = ease.outCubic(range(t, 4.1, 5.0));
-    const flicker = t < 5.2 ? 1 + Math.sin(t * 41) * 0.09 * (1 - ignite) : 1;
-    const draw = ease.inOutCubic(range(t, 4.3, 5.5));
-    this.jointLight.intensity = 1.5 * ignite * flicker;
-    this.diamondLight.intensity = 1.3 * ignite * flicker;
-    for (const l of this.spill) l.intensity = 0.9 * draw;
+    // Свет включается вместе со щелями (4.8–5.8 с), во время пробега по контурам — короткая вспышка
+    const seam = ease.inOutCubic(range(t, 4.8, 5.8));
+    const burst = Math.sin(Math.PI * range(t, 4.25, 6.0));
+    const flicker = t < 5.4 ? 1 + Math.sin(t * 43) * 0.08 * (1 - seam) : 1;
+    this.jointLight.intensity = (0.8 * seam + 0.6 * burst) * flicker;
+    for (const l of this.spill) l.intensity = 0.25 * seam + 0.35 * burst;
     (this.floor.material as MeshBasicMaterial).opacity = 0.32 * ease.outCubic(range(t, 4.4, 6.4));
     (this.haze.material as MeshBasicMaterial).opacity = 0.11 * ease.outCubic(range(t, 0.2, 3.0));
 
     // Блик проходит по металлу и знак встаёт в ракурс покоя
     const settle = ease.inOutCubic(range(t, 0.3, 6.6));
     this.scene.environmentRotation.y = lerp(-0.5, 0.15, ease.inOutCubic(range(t, 3.6, 7)));
-    this.rig.rotation.set(lerp(0.14, REST_PITCH, settle), lerp(-0.5, REST_YAW, settle), 0);
+    this.rig.rotation.set(lerp(-0.12, REST_PITCH, settle), lerp(0.45, REST_YAW, settle), 0);
     this.rig.position.z = lerp(-0.8, 0, settle);
   }
 }

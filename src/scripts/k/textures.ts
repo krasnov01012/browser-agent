@@ -99,3 +99,108 @@ export function radialGlow(size = 128): CanvasTexture {
   tex.colorSpace = SRGBColorSpace;
   return tex;
 }
+
+/** Свечение полосы постоянной яркости по длине: гауссов профиль поперёк, мягкие концы. */
+export function bandGlow(width = 256, height = 64): CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d')!;
+  const img = ctx.createImageData(width, height);
+  for (let y = 0; y < height; y++) {
+    const dy = (y / (height - 1)) * 2 - 1;
+    const across = Math.exp(-(dy * dy) / 0.03) * 0.85 + Math.exp(-(dy * dy) / 0.25) * 0.4;
+    for (let x = 0; x < width; x++) {
+      const dx = x / (width - 1);
+      const ends = Math.min(1, dx / 0.04, (1 - dx) / 0.04);
+      const i = (y * width + x) * 4;
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = 255;
+      img.data[i + 3] = Math.round(Math.max(0, across * ends) * 255);
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  const tex = new CanvasTexture(canvas);
+  tex.colorSpace = SRGBColorSpace;
+  return tex;
+}
+
+/**
+ * Матовый металл с потёртостями (как в ролике): пятна оттенка, мелкие царапины, лёгкая шлифовка.
+ * Возвращает три согласованные карты: цвет (sRGB), шероховатость и рельеф (линейные).
+ * UV лицевых граней — мировые координаты, поэтому repeat задаётся в «единицах знака».
+ */
+export function scratchedMetal(size = 1024): { map: CanvasTexture; roughness: CanvasTexture; bump: CanvasTexture } {
+  const rand = mulberry32(4242);
+  const mk = (): [HTMLCanvasElement, CanvasRenderingContext2D] => {
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    return [c, c.getContext('2d')!];
+  };
+  const [albedo, a] = mk();
+  const [rough, r] = mk();
+  const [bump, b] = mk();
+
+  a.fillStyle = 'rgb(206,207,209)';
+  a.fillRect(0, 0, size, size);
+  r.fillStyle = 'rgb(150,150,150)'; // ≈0.59
+  r.fillRect(0, 0, size, size);
+  b.fillStyle = 'rgb(128,128,128)';
+  b.fillRect(0, 0, size, size);
+
+  // Пятна: мягкие тёмные и светлые области — металл «живой», а не ровно-серый.
+  for (let i = 0; i < 40; i++) {
+    const x = rand() * size;
+    const y = rand() * size;
+    const rad = 120 + rand() * 300;
+    const dark = rand() < 0.55;
+    const alpha = 0.02 + rand() * 0.05;
+    for (const [ctx, col] of [
+      [a, dark ? `rgba(60,62,66,${alpha})` : `rgba(255,255,255,${alpha * 0.7})`],
+      [r, dark ? `rgba(220,220,220,${alpha})` : `rgba(90,90,90,${alpha})`],
+    ] as [CanvasRenderingContext2D, string][]) {
+      const g = ctx.createRadialGradient(x, y, 0, x, y, rad);
+      g.addColorStop(0, col);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(x - rad, y - rad, rad * 2, rad * 2);
+    }
+  }
+
+  // Шлифовка: тонкие продольные риски (едва заметны).
+  for (let y = 0; y < size; y += 1) {
+    if (rand() > 0.35) continue;
+    const alpha = rand() * 0.06;
+    a.fillStyle = `rgba(${rand() < 0.5 ? '255,255,255' : '40,42,46'},${alpha})`;
+    a.fillRect(0, y, size, 1);
+  }
+
+  // Царапины: короткие светлые штрихи под случайными углами — блестят (ниже шероховатость), чуть вдавлены.
+  for (let i = 0; i < 1100; i++) {
+    const x = rand() * size;
+    const y = rand() * size;
+    const len = 6 + Math.pow(rand(), 2.2) * 160;
+    const ang = rand() * Math.PI * 2;
+    const x2 = x + Math.cos(ang) * len;
+    const y2 = y + Math.sin(ang) * len;
+    const alpha = 0.04 + rand() * 0.16;
+    a.strokeStyle = `rgba(245,246,248,${alpha})`;
+    r.strokeStyle = `rgba(70,70,70,${alpha})`;
+    b.strokeStyle = `rgba(40,40,40,${alpha})`;
+    for (const ctx of [a, r, b]) {
+      ctx.lineWidth = rand() < 0.85 ? 1 : 2;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+  }
+
+  const wrap = (c: HTMLCanvasElement, srgb: boolean): CanvasTexture => {
+    const t = new CanvasTexture(c);
+    t.wrapS = t.wrapT = RepeatWrapping;
+    t.colorSpace = srgb ? SRGBColorSpace : LinearSRGBColorSpace;
+    t.anisotropy = 8;
+    return t;
+  };
+  return { map: wrap(albedo, true), roughness: wrap(rough, false), bump: wrap(bump, false) };
+}

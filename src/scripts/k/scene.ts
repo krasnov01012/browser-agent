@@ -83,6 +83,7 @@ export class KScene {
   private main: KModel;
   private mirror: KModel;
   private jointLight: PointLight;
+  private diamondLight: PointLight;
   private spill: PointLight[] = [];
   private haze: Mesh;
   private floor: Mesh;
@@ -134,6 +135,10 @@ export class KScene {
     this.jointLight = new PointLight(CORAL, 0, 3.2, 2);
     this.jointLight.position.set(jx + 0.35, jy, 0.9);
     this.rig.add(this.jointLight);
+    const [dx, dy] = this.main.lights!.diamond;
+    this.diamondLight = new PointLight(CORAL, 0, 2.6, 2);
+    this.diamondLight.position.set(dx, dy, 1.0);
+    this.rig.add(this.diamondLight);
     for (const [x, y] of [
       [0.6, 0.7],
       [0.6, -0.7],
@@ -268,6 +273,7 @@ export class KScene {
     const flicker = t < 5.2 ? 1 + Math.sin(t * 41) * 0.09 * (1 - ignite) : 1;
     const draw = ease.inOutCubic(range(t, 4.3, 5.5));
     this.jointLight.intensity = 1.5 * ignite * flicker;
+    this.diamondLight.intensity = 1.3 * ignite * flicker;
     for (const l of this.spill) l.intensity = 0.9 * draw;
     (this.floor.material as MeshBasicMaterial).opacity = 0.32 * ease.outCubic(range(t, 4.4, 6.4));
     (this.haze.material as MeshBasicMaterial).opacity = 0.11 * ease.outCubic(range(t, 0.2, 3.0));

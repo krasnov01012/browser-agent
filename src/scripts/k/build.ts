@@ -57,7 +57,7 @@ export interface KModel {
   /** Состояние модели в момент t хореографии (секунды). */
   apply(t: number): void;
   /** Свет узла для сцены (в экземпляре-призраке null). */
-  lights: { joint: Vec2 } | null;
+  lights: { joint: Vec2; diamond: Vec2 } | null;
 }
 
 // — Вспомогательное —
@@ -149,23 +149,30 @@ function metal(angle: number, tint: string, roughness: number, ghost: boolean): 
     map.needsUpdate = true;
     map.center.set(0.5, 0.5);
     map.rotation = angle;
-    map.repeat.set(1.6, 1.6);
+    map.repeat.set(2.4, 2.4);
     mapCache.set(key, map);
   }
   const c = new Color(tint);
   if (ghost) c.multiplyScalar(0.55);
+  // Матовый шлифованный металл: высокая шероховатость, без лака, мелкий рельеф рисок и приглушённое окружение.
   return new MeshPhysicalMaterial({
     color: c,
     vertexColors: true,
     metalness: 1,
     roughness,
     roughnessMap: map,
-    anisotropy: ghost ? 0 : 0.5,
+    bumpMap: ghost ? null : map,
+    bumpScale: 0.9,
+    anisotropy: ghost ? 0 : 0.35,
     anisotropyRotation: angle,
-    clearcoat: ghost ? 0 : 0.35,
-    clearcoatRoughness: 0.25,
-    envMapIntensity: ghost ? 0.7 : 1.1,
+    clearcoat: 0,
+    envMapIntensity: ghost ? 0.6 : 0.85,
   });
+}
+
+/** Оранжевый ромб: собственное свечение (emissiveIntensity растёт при «фиксации»). */
+function diamondMaterial(): MeshPhysicalMaterial {
+  return new MeshPhysicalMaterial({ color: CORAL.clone().multiplyScalar(0.55), emissive: CORAL, emissiveIntensity: 0, metalness: 0.3, roughness: 0.5 });
 }
 
 /** Точка на «ленте» между двумя длинными сторонами четырёхугольника (A по P1→P2, B по P0→P3). */
@@ -193,8 +200,8 @@ export function buildK({ ghost }: BuildOptions): KModel {
   const glowTex = lineGlow();
   const radial = radialGlow();
 
-  const dark = (angle: number) => metal(angle, '#8d929d', 0.48, ghost);
-  const steel = (angle: number, tone = '#e4e5e4') => metal(angle, tone, 0.42, ghost);
+  const dark = (angle: number) => metal(angle, '#b6bac1', 0.66, ghost);
+  const steel = (angle: number, tone = '#e2e3e2') => metal(angle, tone, 0.58, ghost);
 
   /** Добавляет деталь: геометрия строится в мировых координатах, затем центрируется для вращения «на месте». */
   function add(
@@ -225,46 +232,29 @@ export function buildK({ ghost }: BuildOptions): KModel {
     return mesh;
   }
 
-  // ═══ Опора: полая рама ═══
+  // ═══ Опора: цельный брус с фрезерованной панелью и светящимся ромбом ═══
   const [sx0] = toWorld(contours.stem[0]);
   const [sx1] = toWorld(contours.stem[1]);
   const [, syTop] = toWorld(contours.stem[0]);
   const [, syBot] = toWorld(contours.stem[2]);
   const sw = sx1 - sx0;
   const cx = (sx0 + sx1) / 2;
-  const rail = 0.17;
   const stemD = 0.78;
   const vert = Math.PI / 2;
+  void sw;
 
-  let w = 0.3;
-  const stemWin = (): [number, number] => {
-    const s = w;
-    w += 0.12;
-    return [s, s + 2.3];
-  };
-  add(slab(rect(sx0, syBot, sx0 + rail, syTop), stemD, 0.03), steel(vert), stemWin(), 1.6);
-  add(slab(rect(sx1 - rail, syBot, sx1, syTop), stemD, 0.03), steel(vert), stemWin(), 1.6);
-  add(slab(rect(sx0, syTop - rail, sx1, syTop), stemD - 0.04, 0.03), steel(0), stemWin(), 1.9);
-  add(slab(rect(sx0, syBot, sx1, syBot + rail), stemD - 0.04, 0.03), steel(0), stemWin(), 1.9);
-  add(slab(rect(sx0 + 0.05, syBot + 0.1, sx1 - 0.05, syTop - 0.1), 0.06, 0.012), dark(vert), stemWin(), 2.2, { offset: [0, 0, -0.32] });
+  add(slab(rect(sx0, syBot, sx1, syTop), stemD, 0.036), steel(vert), [0.3, 2.6], 1.6);
+  // Накладная панель по лицу опоры: ступенька и фаски читаются как обработанная деталь
+  add(slab(rect(sx0 + 0.09, syBot + 0.2, sx1 - 0.09, syTop - 0.2), 0.05, 0.014), dark(vert), [0.6, 3.0], 2.2, { offset: [0, 0, stemD / 2 + 0.012] });
 
-  // Поперечные рёбра жёсткости внутри рамы (вокруг узла окно свободно)
-  for (const y of [-1.95, -1.4, -0.85, 0.85, 1.4, 1.95]) {
-    add(slab(rect(sx0 + rail - 0.01, y - 0.02, sx1 - rail + 0.01, y + 0.02), 0.52, 0.008), dark(0), stemWin(), 2.4, { offset: [0, 0, -0.04] });
-  }
-  // Центральная тяга и вертикальная внутренняя пластина
-  const rod = new CylinderGeometry(0.032, 0.032, syTop - syBot - 0.5, 18);
-  add(rod, steel(0, '#bfc2c6'), stemWin(), 2.6, { offset: [cx, 0, -0.14] });
-  add(slab(rect(cx + 0.045, syBot + 0.5, cx + 0.105, syTop - 0.5), 0.34, 0.01), dark(vert), stemWin(), 2.4, { offset: [0, 0, 0.06] });
-
-  // Ромб-стяжка в узле (тёмный металл с коралловой кромкой)
+  // Ромб по центру опоры: оранжевый, светится (эмиссия включается при «фиксации»)
   const diamond: Vec2[] = [
-    [cx, 0.4],
+    [cx, 0.42],
     [cx + 0.2, 0],
-    [cx, -0.4],
+    [cx, -0.42],
     [cx - 0.2, 0],
   ];
-  add(slab(diamond, 0.14, 0.022), dark(0), [2.5, 4.3], 3.0, { accent: true, offset: [0, 0, 0.1] });
+  const diamondMesh = add(slab(diamond, 0.08, 0.016), diamondMaterial(), [2.5, 4.3], 3.0, { accent: true, offset: [0, 0, stemD / 2 + 0.05] });
 
   // ═══ Нижняя балка: массивная плита с фасетками ═══
   const lowerPts = contours.lower.map(toWorld) as Vec2[];
@@ -277,37 +267,29 @@ export function buildK({ ghost }: BuildOptions): KModel {
   add(slab(facet(lq, 0.1, 0.55), 0.1, 0.02), steel(lowerAngle, '#f0f0ee'), [2.3, 4.2], 2.8, { offset: [0, 0, lowerZ + lowerT / 2 + 0.03] });
   add(slab(facet(lq, 0.62, 0.98), 0.1, 0.02), dark(lowerAngle), [2.5, 4.4], 2.8, { offset: [0, 0, lowerZ + lowerT / 2 + 0.03] });
 
-  // ═══ Верхняя балка: рама с внутренними пластинами ═══
+  // ═══ Верхняя балка: цельная плита с накладными фасетками ═══
   const upperPts = contours.upper.map(toWorld) as Vec2[];
-  const upperHole = inset(upperPts, 0.1);
+  const upperIn = inset(upperPts, 0.075);
   const upperAngle = Math.atan2(upperPts[1]![1] - upperPts[0]![1], upperPts[1]![0] - upperPts[0]![0]);
   const upperT = 0.46;
   const upperZ = -0.06;
-  add(slab(upperPts, upperT, 0.03, upperHole), steel(upperAngle), [1.4, 3.9], 2.2, { offset: [0, 0, upperZ] });
-  add(slab(upperHole, 0.04, 0.01), dark(upperAngle), [1.6, 4.0], 2.4, { offset: [0, 0, upperZ - 0.17] });
-  const uq: [Vec2, Vec2, Vec2, Vec2] = [inset(upperPts, 0.16)[0]!, inset(upperPts, 0.16)[1]!, inset(upperPts, 0.16)[2]!, inset(upperPts, 0.16)[3]!];
-  // Контур upper: P0→P1 — внешняя длинная сторона, P3→P2 — внутренняя; A = P0→P1, B = P3→P2
-  add(slab(facet(uq, 0.08, 0.5), 0.14, 0.018), steel(upperAngle, '#d9dadb'), [2.1, 4.1], 2.8, { offset: [0, 0, upperZ - 0.02] });
-  add(slab(facet(uq, 0.57, 0.95), 0.14, 0.018), dark(-upperAngle), [2.3, 4.3], 2.8, { offset: [0, 0, upperZ - 0.02] });
+  add(slab(upperPts, upperT, 0.032), steel(upperAngle), [1.4, 3.9], 2.2, { offset: [0, 0, upperZ] });
+  // Контур upper: A = P0→P1 (внешняя сторона), B = P3→P2 (внутренняя)
+  const uq: [Vec2, Vec2, Vec2, Vec2] = [upperIn[0]!, upperIn[1]!, upperIn[2]!, upperIn[3]!];
+  add(slab(facet(uq, 0.1, 0.52), 0.1, 0.02), steel(upperAngle, '#f0f0ee'), [2.1, 4.1], 2.8, { offset: [0, 0, upperZ + upperT / 2 + 0.03] });
+  add(slab(facet(uq, 0.6, 0.97), 0.1, 0.02), dark(-upperAngle), [2.3, 4.3], 2.8, { offset: [0, 0, upperZ + upperT / 2 + 0.03] });
 
-  // ═══ Детали узла: болты и штифты ═══
+  // ═══ Крепёж на лице опоры ═══
   const bolt = (x: number, y: number, z: number, win: [number, number]) => {
-    const g = new CylinderGeometry(0.045, 0.045, 0.035, 6);
+    const g = new CylinderGeometry(0.042, 0.042, 0.035, 6);
     g.rotateX(vert);
-    add(g, steel(0, '#c9ccd0'), win, 3.4, { offset: [x, y, z] });
+    add(g, steel(0, '#cfd2d6'), win, 3.4, { offset: [x, y, z] });
   };
   let bw = 2.6;
   for (const y of [-2.0, -1.2, 1.2, 2.0]) {
-    bolt(sx0 + rail / 2, y, stemD / 2 + 0.01, [bw, bw + 1.5]);
-    bolt(sx1 - rail / 2, y, stemD / 2 + 0.01, [bw + 0.15, bw + 1.65]);
+    bolt(sx0 + 0.045, y, stemD / 2 + 0.01, [bw, bw + 1.5]);
+    bolt(sx1 - 0.045, y, stemD / 2 + 0.01, [bw + 0.15, bw + 1.65]);
     bw += 0.12;
-  }
-  // Штифт, пронизывающий опору в узле, с головками
-  for (const y of [0.55, -0.55]) {
-    const pin = new CylinderGeometry(0.03, 0.03, sw - 0.1, 14);
-    pin.rotateZ(vert);
-    add(pin, steel(0, '#d4d6d9'), [bw, bw + 1.4], 3.2, { offset: [cx, y, 0.02] });
-    bw += 0.1;
   }
 
   // ═══ Свет: швы, узел ═══
@@ -356,6 +338,15 @@ export function buildK({ ghost }: BuildOptions): KModel {
   flare.position.set(jx + 0.4, jy, lowerFront + 0.065);
   root.add(core, glow, flare);
 
+  // Ореол ромба на лице опоры
+  const diaGlow = new Mesh(
+    new PlaneGeometry(1.7, 2.4),
+    new MeshBasicMaterial({ map: radial, color: CORAL, transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false, toneMapped: false }),
+  );
+  diaGlow.position.set(cx, 0, stemD / 2 + 0.11);
+  root.add(diaGlow);
+  const diamondPart = parts.find((p) => p.mesh === diamondMesh)!;
+
   const euler = new Euler();
   function apply(t: number): void {
     for (const p of parts) {
@@ -375,6 +366,8 @@ export function buildK({ ghost }: BuildOptions): KModel {
     const ignite = ease.outCubic(range(t, 4.1, 5.0));
     const draw = ease.inOutCubic(range(t, 4.3, 5.5));
     const flicker = t < 5.2 ? 1 + Math.sin(t * 41) * 0.09 * (1 - ignite) : 1;
+    diamondPart.material.emissiveIntensity = 2.4 * ignite * (ghost ? 0.4 : 1);
+    (diaGlow.material as MeshBasicMaterial).opacity = ignite * 0.65 * flicker * gk;
     (core.material as MeshBasicMaterial).opacity = ignite * gk;
     core.scale.setScalar(0.4 + 0.6 * ignite);
     (glow.material as MeshBasicMaterial).opacity = ignite * 0.8 * flicker * gk;
@@ -388,6 +381,6 @@ export function buildK({ ghost }: BuildOptions): KModel {
     }
   }
 
-  return { root, apply, lights: ghost ? null : { joint: [jx, jy] } };
+  return { root, apply, lights: ghost ? null : { joint: [jx, jy], diamond: [cx, 0] } };
 }
 

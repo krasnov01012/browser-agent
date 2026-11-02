@@ -1,0 +1,98 @@
+---
+/**
+ * Инфраструктура и сопровождение: сборка → деплой → мониторинг → бэкапы.
+ * Конвейер сверху, серверы в центре, монитор с «пульсом» и стопка снимков-бэкапов.
+ */
+interface Props {
+  id: string;
+}
+const { id } = Astro.props;
+const stages = ['BUILD', 'TEST', 'DEPLOY'];
+const servers = [92, 136, 180];
+// Длинная линия пульса: прокручивается влево внутри окна монитора
+const pulse = Array.from({ length: 12 }, (_, i) => `l12 0 4 -14 4 26 4 -12 ${i % 3 === 1 ? '6 -6 4 6' : '10 0'} 6 0`).join(' ');
+---
+
+<g>
+  <!-- Акт 1: сборка -->
+  {
+    stages.map((s, i) => (
+      <g class="ss-in1" style={`--d: ${i * 0.3}s`}>
+        <rect x={36 + i * 104} y="30" width="88" height="34" rx="3" class="ss-f" />
+        <text x={46 + i * 104} y="44">
+          {s}
+        </text>
+        <rect x={46 + i * 104} y="51" width="68" height="4" class="ss-faint" />
+      </g>
+    ))
+  }
+  <rect x="46" y="51" width="68" height="4" class="ss-cf ss-draw1" style="--d: .4s"></rect>
+  <rect x="150" y="51" width="68" height="4" class="ss-cf ss-draw2"></rect>
+  <rect x="254" y="51" width="68" height="4" class="ss-cf ss-draw2" style="--d: 1.2s"></rect>
+  <path d="M124 47H140M228 47H244" class="ss-l ss-in1" style="--d: .6s"></path>
+  <g class="ss-in1" style="--d: 1s">
+    <path d="M366 36l18 -9 18 9 -18 9z" class="ss-l"></path>
+    <path d="M366 36v20l18 9v-20zM402 36v20l-18 9" class="ss-f"></path>
+    <text x="410" y="50">IMAGE</text>
+  </g>
+
+  <!-- Акт 2: деплой на серверы -->
+  <path d="M298 64V80H120V92" class="ss-l ss-draw2" style="--d: .8s"></path>
+  {
+    servers.map((y, i) => (
+      <g class="ss-in2" style={`--d: ${0.4 + i * 0.25}s`}>
+        <rect x="36" y={y} width="168" height="36" rx="3" class="ss-f" style={i === 0 ? `fill: url(#ss-steel-${id})` : undefined} />
+        <path d={`M50 ${y + 12}H120M50 ${y + 22}H100`} class="ss-s" />
+        <circle cx="186" cy={y + 18} r="3.5" class="ss-cf ss-glow ss-blink" style={`--d: ${i * 0.5}s; --blink: ${1.6 + i * 0.4}s`} />
+        <circle cx="174" cy={y + 18} r="3.5" class="ss-dim" />
+      </g>
+    ))
+  }
+  <g class="ss-in2">
+    <circle r="3" class="ss-cf ss-glow ss-run" style="offset-path: path('M298 64V80H120V92'); --run: 1.6s; --d: .9s"></circle>
+  </g>
+  <g class="ss-pop2" style="--d: 1.6s">
+    <path d="M232 112l16 6v14c0 9 -7 14 -16 18c-9 -4 -16 -9 -16 -18v-14z" class="ss-f"></path>
+    <path d="M227 129h10v8h-10z M229 129v-3a3 3 0 0 1 6 0v3" class="ss-c"></path>
+    <text x="232" y="164" text-anchor="middle">TLS</text>
+  </g>
+
+  <!-- Акт 3: мониторинг — пульс прокручивается, всплеск разбирается -->
+  <g class="ss-in3">
+    <rect x="270" y="92" width="190" height="96" rx="4" class="ss-f"></rect>
+    <text x="280" y="106">MONITORING</text>
+    <path d="M270 112H460" class="ss-s"></path>
+    <path d="M280 168H450" class="ss-s ss-dash"></path>
+  </g>
+  <svg x="276" y="114" width="178" height="68" viewBox="0 0 178 68" class="ss-in3" style="--d: .3s" overflow="hidden">
+    <path d={`M0 40 ${pulse}`} class="ss-c ss-pulse-line"></path>
+  </svg>
+  <g class="ss-only3" style="--d: .4s">
+    <circle cx="424" cy="104" r="3" class="ss-cf ss-ring"></circle>
+    <text x="356" y="106" class="ss-tc">ALERT → AUTO</text>
+  </g>
+  <g class="ss-in4" style="--d: 1s">
+    <text x="372" y="106" class="ss-ti">ALL GREEN</text>
+  </g>
+
+  <!-- Акт 4: резервные копии -->
+  {
+    [0, 1, 2].map((i) => (
+      <g class="ss-in4" style={`--d: ${0.3 + i * 0.35}s`}>
+        <rect x={270 + i * 8} y={212 - i * 8} width="96" height="44" rx="3" class="ss-f" />
+        <rect x={278 + i * 8} y={222 - i * 8} width="54" height="4" class="ss-dim" />
+        <rect x={278 + i * 8} y={232 - i * 8} width="36" height="4" class="ss-faint" />
+      </g>
+    ))
+  }
+  <g class="ss-in4" style="--d: 1.4s">
+    <text x="392" y="214">SNAPSHOT</text>
+    <text x="392" y="228" class="ss-tc">✓ VERIFIED</text>
+    <text x="392" y="242">RESTORE TESTED</text>
+  </g>
+  <g class="ss-in4" style="--d: .6s">
+    <text x="36" y="246">UPTIME</text>
+    <rect x="36" y="254" width="168" height="4" class="ss-faint"></rect>
+  </g>
+  <rect x="36" y="254" width="168" height="4" class="ss-cf ss-draw4" style="--d: .8s"></rect>
+</g>

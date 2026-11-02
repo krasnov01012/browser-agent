@@ -1,0 +1,79 @@
+---
+/**
+ * Данные и интеграции: источники → нормализация → хранилище → аналитика.
+ * Слева в узел входят «разнородные» данные (разные формы), справа выходят одинаковые записи.
+ * На графике — только форма линий, без чисел: это схема, а не отчёт.
+ */
+interface Props {
+  id: string;
+}
+const { id } = Astro.props;
+const sources = ['API', 'CSV', 'CRM', 'SHOP'];
+const ys = [56, 104, 152, 200];
+const wire = (y: number) => `M84 ${y}C 118 ${y}, 120 128, 150 128`;
+---
+
+<!-- Сдвиг вниз: композиция по центру кадра -->
+<g transform="translate(0 14)">
+  <!-- Акт 1: источники и «сырые» данные -->
+  {
+    sources.map((s, i) => (
+      <g class="ss-in1" style={`--d: ${i * 0.2}s`}>
+        <rect x="22" y={ys[i]! - 15} width="62" height="30" rx="3" class="ss-f" />
+        <text x="53" y={ys[i]! + 3} text-anchor="middle">
+          {s}
+        </text>
+        <path d={wire(ys[i]!)} class="ss-l" />
+      </g>
+    ))
+  }
+  <g class="ss-in1" style="--d: .8s">
+    <circle r="3.2" class="ss-iv ss-run" style={`offset-path: path('${wire(56)}'); --d: 0s`}></circle>
+    <path d="M0 -4L4 3H-4Z" class="ss-iv ss-run" style={`offset-path: path('${wire(104)}'); --d: .5s`}></path>
+    <path d="M0 -4L4 0L0 4L-4 0Z" class="ss-iv ss-run" style={`offset-path: path('${wire(152)}'); --d: 1s`}></path>
+    <rect x="-4" y="-2" width="8" height="4" class="ss-iv ss-run" style={`offset-path: path('${wire(200)}'); --d: 1.5s`}></rect>
+  </g>
+
+  <!-- Акт 2: нормализация — единый формат -->
+  <g class="ss-pop2">
+    <path d="M150 104L186 128L150 152Z" fill={`url(#ss-steel-${id})`} class="ss-l"></path>
+    <path d="M186 104V152" class="ss-c"></path>
+  </g>
+  <text x="138" y="174" class="ss-in2" style="--d: .3s">NORMALIZE</text>
+  <path d="M186 128H262" class="ss-l ss-draw2" style="--d: .4s"></path>
+  <g class="ss-in2" style="--d: .6s">
+    {[0, 1, 2, 3].map((i) => <rect x="-3" y="-3" width="6" height="6" class="ss-cf ss-run" style={`offset-path: path('M186 128H262'); --d: ${i * 0.38}s; --run: 1.5s`} />)}
+  </g>
+  <g class="ss-only2">
+    <rect x="196" y="76" width="96" height="36" rx="3" class="ss-f"></rect>
+    <text x="202" y="89" class="ss-ti">{'{ id, sku, price,'}</text>
+    <text x="202" y="102" class="ss-ti">{'  updated_at }'}</text>
+  </g>
+
+  <!-- Акт 3: хранилище — слои базы наполняются -->
+  <g class="ss-in3">
+    <ellipse cx="290" cy="94" rx="28" ry="9" class="ss-f"></ellipse>
+    <path d="M262 94V162A28 9 0 0 0 318 162V94" class="ss-f"></path>
+    <ellipse cx="290" cy="94" rx="28" ry="9" class="ss-f"></ellipse>
+  </g>
+  {[116, 136, 156].map((y, i) => <path d={`M262 ${y}A28 9 0 0 0 318 ${y}`} class="ss-l ss-in3" style={`--d: ${0.4 + i * 0.35}s`} />)}
+  <text x="268" y="186" class="ss-in3" style="--d: .3s">POSTGRES</text>
+  <path d="M318 128H340" class="ss-l ss-draw3" style="--d: 1.4s"></path>
+
+  <!-- Акт 4: аналитика -->
+  <g class="ss-in4">
+    <rect x="340" y="62" width="122" height="150" rx="4" class="ss-f"></rect>
+    <text x="348" y="76">DASHBOARD</text>
+    <path d="M348 82H454" class="ss-s"></path>
+    <path d="M350 196H452M350 168H452M350 140H452M350 112H452" class="ss-s ss-dash"></path>
+  </g>
+  {[0, 1, 2, 3, 4, 5].map((i) => <rect x={354 + i * 16} y={196 - [30, 46, 38, 62, 54, 76][i]!} width="9" height={[30, 46, 38, 62, 54, 76][i]} class={i === 5 ? 'ss-cf ss-grow4' : 'ss-dim ss-grow4'} style={`--d: ${0.3 + i * 0.12}s`} />)}
+  <path d="M354 150L370 138L386 144L402 120L418 126L436 100L452 92" class="ss-l ss-draw4" style="--d: 1s"></path>
+  <circle cx="452" cy="92" r="3" class="ss-cf ss-glow ss-in4" style="--d: 2s"></circle>
+  <g class="ss-in4" style="--d: 1.6s">
+    <rect x="340" y="222" width="122" height="36" rx="4" class="ss-f"></rect>
+    <text x="348" y="236">SYNC</text>
+    <text x="348" y="250" class="ss-ti">SCHEDULED</text>
+    <circle cx="450" cy="233" r="2.4" class="ss-cf ss-blink"></circle>
+  </g>
+</g>

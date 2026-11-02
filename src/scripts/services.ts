@@ -2,6 +2,8 @@
  * Каталог услуг. Desktop: строка активирует общую панель справа (клик, клавиатура,
  * наведение с небольшой задержкой). Mobile: аккордеон — панель раскрывается под строкой.
  */
+import { reducedMotion } from './motion';
+
 const desktop = matchMedia('(min-width: 1024px)');
 const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
 
@@ -15,6 +17,14 @@ export function initServices(): void {
       const on = it === item && !(toggle && !desktop.matches && it.hasAttribute('data-active'));
       it.toggleAttribute('data-active', on);
       it.querySelector('[data-svc-trigger]')?.setAttribute('aria-expanded', String(on));
+      // Видео сцены (если подключено) играет только у открытой панели и только при разрешённом движении
+      const video = it.querySelector<HTMLVideoElement>('[data-svc-video]');
+      if (video) {
+        if (on && !reducedMotion()) {
+          video.currentTime = 0;
+          void video.play().catch(() => undefined);
+        } else video.pause();
+      }
     }
   };
 

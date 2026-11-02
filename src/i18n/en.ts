@@ -60,6 +60,7 @@ export const en: Dict = {
         description:
           'Websites, online stores, SaaS platforms, customer portals and web applications — designed around how your customers actually use them.',
         deliverables: ['Websites & eCommerce', 'SaaS & web applications', 'Customer portals', 'Content management'],
+        acts: ['Wireframe', 'Interface', 'Responsive', 'Launch'],
       },
       {
         id: 'systems',
@@ -68,6 +69,7 @@ export const en: Dict = {
         description:
           'CRM, internal tools, admin panels and bespoke business logic — software shaped around your workflows instead of the other way round.',
         deliverables: ['CRM & internal systems', 'Admin panels', 'Business logic & workflows', 'Custom applications'],
+        acts: ['Modules', 'Core', 'Roles', 'Workflows'],
       },
       {
         id: 'ai',
@@ -76,6 +78,7 @@ export const en: Dict = {
         description:
           'AI agents, assistants and LLM integrations — used where they simplify a real process, with deterministic checks where accuracy matters.',
         deliverables: ['AI agents & assistants', 'LLM integration', 'Workflow automation', 'Document & data processing'],
+        acts: ['Request', 'Model', 'Checks', 'Human decides'],
       },
       {
         id: 'data',
@@ -84,6 +87,7 @@ export const en: Dict = {
         description:
           'APIs, ETL pipelines, databases and dashboards — connecting the services you already use into one reliable flow of data.',
         deliverables: ['API integrations', 'ETL & data pipelines', 'Database design', 'Analytics & dashboards'],
+        acts: ['Sources', 'Normalize', 'Store', 'Insight'],
       },
       {
         id: 'infra',
@@ -92,6 +96,7 @@ export const en: Dict = {
         description:
           'Deployment, hosting, domains and TLS, monitoring, backups, updates and further development — a separate paid service after launch, scoped by agreement.',
         deliverables: ['Deployment & hosting', 'Domains & TLS', 'Monitoring & backups', 'Maintenance & development'],
+        acts: ['Build', 'Deploy', 'Monitor', 'Backup'],
       },
     ],
   },

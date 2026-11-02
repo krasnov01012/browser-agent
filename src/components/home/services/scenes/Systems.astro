@@ -1,0 +1,82 @@
+---
+/**
+ * Заказное ПО и бизнес-системы: модули → ядро → роли и права → процессы.
+ * Модули «прилетают» к своим местам (как сборка знака K), ядро связывает их, затем по связям идут данные.
+ */
+interface Props {
+  id: string;
+}
+const { id } = Astro.props;
+const mods = [
+  { x: 36, y: 36, l: 'CRM', role: 'MANAGER', dx: -30, dy: -20, wire: 'M126 60H158V136H190' },
+  { x: 354, y: 36, l: 'ADMIN', role: 'OWNER', dx: 30, dy: -20, wire: 'M354 60H322V136H290' },
+  { x: 36, y: 216, l: 'API', role: 'SERVICE', dx: -30, dy: 20, wire: 'M126 240H158V164H190' },
+  { x: 354, y: 216, l: 'REPORTS', role: 'VIEWER', dx: 30, dy: 20, wire: 'M354 240H322V164H290' },
+];
+---
+
+<g>
+  <!-- Акт 1: модули занимают свои места -->
+  {
+    mods.map((m, i) => (
+      <g class="ss-fly" style={`--d: ${i * 0.25}s; --fx: ${m.dx * 2}px; --fy: ${m.dy * 2}px; --fr: ${i % 2 ? 6 : -6}deg`}>
+        <g transform={`translate(${m.x} ${m.y})`}>
+          <rect width="90" height="48" rx="3" class="ss-f" />
+          <path d="M0 14H90" class="ss-s" />
+          <circle cx="8" cy="7" r="2" class={i === 1 ? 'ss-cf' : 'ss-dim'} />
+          <text x="15" y="10">{m.l}</text>
+          <rect x="8" y="21" width="52" height="3" class="ss-dim" />
+          <rect x="8" y="29" width="70" height="3" class="ss-faint" />
+          <rect x="8" y="37" width="38" height="3" class="ss-faint" />
+        </g>
+      </g>
+    ))
+  }
+  <g class="ss-only1">
+    {mods.map((m) => <path d={`M${m.x + 45 + m.dx * 2} ${m.y + 24 + m.dy * 2}L${m.x + 45} ${m.y + 24}`} class="ss-s ss-dash" />)}
+    <text x="182" y="290">MODULES · 4 / 4</text>
+  </g>
+
+  <!-- Акт 2: ядро и связи -->
+  {mods.map((m, i) => <path d={m.wire} class="ss-l ss-draw2" style={`--d: ${0.3 + i * 0.12}s`} />)}
+  <path d="M240 84V118" class="ss-l ss-drawv2" style="--d: .5s"></path>
+  <g class="ss-pop2">
+    <rect x="190" y="118" width="100" height="64" rx="4" fill={`url(#ss-steel-${id})`} class="ss-l"></rect>
+    <text x="240" y="146" text-anchor="middle" class="ss-ti ss-big">CORE</text>
+    <text x="240" y="162" text-anchor="middle">DOMAIN LOGIC</text>
+    <rect x="198" y="126" width="6" height="6" class="ss-cf"></rect>
+  </g>
+  <g class="ss-in2" style="--d: .2s">
+    <rect x="195" y="44" width="90" height="40" rx="3" class="ss-f"></rect>
+    <text x="240" y="60" text-anchor="middle">AUTH</text>
+    <path d="M233 70h14v9h-14z M236 70v-3a4 4 0 0 1 8 0v3" class="ss-l"></path>
+  </g>
+
+  <!-- Акт 3: роли и права на модулях -->
+  {
+    mods.map((m, i) => (
+      <g class="ss-pop3" style={`--d: ${0.2 + i * 0.2}s`}>
+        <rect x={m.x + (i % 2 ? -8 : 34)} y={m.y + (i < 2 ? 52 : -16)} width="64" height="12" rx="6" class={i === 1 ? 'ss-cf' : 'ss-faint'} />
+        <text x={m.x + (i % 2 ? -2 : 40)} y={m.y + (i < 2 ? 61 : -7)} class={i === 1 ? 'ss-ti' : ''}>
+          {m.role}
+        </text>
+      </g>
+    ))
+  }
+  <g class="ss-only3" style="--d: .3s">
+    <rect x="182" y="110" width="116" height="80" rx="6" class="ss-c ss-dash"></rect>
+    <text x="240" y="204" text-anchor="middle" class="ss-tc">ACCESS · ROLE-BASED</text>
+  </g>
+
+  <!-- Акт 4: процессы — данные идут по связям, таблица заполняется -->
+  <g class="ss-in4">
+    {mods.map((m, i) => <circle r="3" class="ss-cf ss-glow ss-run" style={`offset-path: path('${m.wire}'); --d: ${i * 0.45}s; --run: 1.8s`} />)}
+    <circle r="2.5" class="ss-cf ss-run" style="offset-path: path('M240 84V118'); --d: .9s; --run: 1.2s"></circle>
+  </g>
+  <g class="ss-in4" style="--d: .3s">
+    <rect x="196" y="214" width="88" height="56" rx="3" class="ss-f"></rect>
+    <path d="M196 226H284" class="ss-s"></path>
+    <text x="202" y="223">QUEUE</text>
+  </g>
+  {[232, 242, 252, 262].map((y, i) => <rect x="202" y={y} width={i % 2 ? 54 : 72} height="4" class={i === 0 ? 'ss-cf ss-draw4' : 'ss-dim ss-draw4'} style={`--d: ${0.6 + i * 0.25}s`} />)}
+</g>

@@ -103,7 +103,7 @@ src/
     Header, Footer, ReviewBar
     ui/            KMark, Arrow, Lines (построчная маска), Eyebrow
     k/             KBlueprint — чертёж K в пространстве geometry.json
-    home/          Hero, Services(+ServiceDiagram), Bridge, SelectedWork, Approach, Process
+    home/          Hero, Services(+services/ServiceScene — сцены услуг в 4 акта), Bridge, SelectedWork, Approach, Process
     intake/        Intake (Contact + Architect), LeadFields, Architect
     cases/         SeshatVisual, MarkVisual, секции страниц кейсов
   scripts/

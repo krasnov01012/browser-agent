@@ -1,0 +1,75 @@
+---
+/**
+ * «Кинематографичная» схема услуги: короткая сцена из четырёх актов (≈12 с, по кругу).
+ * Камера медленно наезжает, по кадру проходит свет, внизу — подписи актов с прогрессом.
+ * Всё движение — transform / opacity / clip-path (и offset-distance у точек-пакетов) и только у
+ * открытой панели в кадре (.motion [data-active] .ss.is-playing). Без движения виден финальный кадр.
+ * Если для услуги есть видео (src/content/serviceMedia.ts) — оно ложится поверх сцены.
+ * Сами сцены — ./scenes/*, общие классы и ключевые кадры — ./scene.css.
+ */
+import Web from './scenes/Web.astro';
+import Systems from './scenes/Systems.astro';
+import Ai from './scenes/Ai.astro';
+import Data from './scenes/Data.astro';
+import Infra from './scenes/Infra.astro';
+import { serviceMedia } from '@/content/serviceMedia';
+import './scene.css';
+
+interface Props {
+  kind: string;
+  acts: readonly string[];
+}
+const { kind, acts } = Astro.props;
+const scenes = { web: Web, systems: Systems, ai: Ai, data: Data, infra: Infra } as const;
+const Scene = scenes[kind as keyof typeof scenes];
+const media = serviceMedia[kind];
+---
+
+<figure class={`ss ss--${kind}`} data-play>
+  <svg class="ss__svg" viewBox="0 0 480 300" fill="none" aria-hidden="true">
+    <defs>
+      <pattern id={`ss-grid-${kind}`} width="20" height="20" patternUnits="userSpaceOnUse">
+        <path d="M20 0H0V20" class="ss-grid"></path>
+      </pattern>
+      <radialGradient id={`ss-vig-${kind}`} cx="50%" cy="46%" r="68%">
+        <stop offset="0.55" stop-color="#0B0D11" stop-opacity="0"></stop>
+        <stop offset="1" stop-color="#0B0D11" stop-opacity="0.9"></stop>
+      </radialGradient>
+      <linearGradient id={`ss-sweep-${kind}`} x1="0" x2="1">
+        <stop offset="0" stop-color="#F3F0E9" stop-opacity="0"></stop>
+        <stop offset="0.5" stop-color="#F3F0E9" stop-opacity="0.08"></stop>
+        <stop offset="1" stop-color="#F3F0E9" stop-opacity="0"></stop>
+      </linearGradient>
+      <linearGradient id={`ss-steel-${kind}`} x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#3a3f48"></stop>
+        <stop offset="0.55" stop-color="#20242b"></stop>
+        <stop offset="1" stop-color="#15181d"></stop>
+      </linearGradient>
+    </defs>
+    <rect width="480" height="300" fill={`url(#ss-grid-${kind})`}></rect>
+    <g class="ss__cam">{Scene && <Scene id={kind} />}</g>
+    <g transform="skewX(-16)"><rect class="ss__sweep" x="-190" y="-20" width="110" height="340" fill={`url(#ss-sweep-${kind})`}></rect></g>
+    <rect width="480" height="300" fill={`url(#ss-vig-${kind})`}></rect>
+    <path class="ss__corners" d="M10 22V10H22 M458 10H470V22 M470 278V290H458 M22 290H10V278"></path>
+  </svg>
+  {
+    media && (
+      <video class="ss__video" muted loop playsinline preload="none" poster={media.poster} data-svc-video aria-hidden="true">
+        <source src={media.mp4} type="video/mp4" />
+      </video>
+    )
+  }
+  <figcaption class="ss__acts">
+    <ol>
+      {
+        acts.map((a, i) => (
+          <li>
+            <span class="ss__n">{String(i + 1).padStart(2, '0')}</span>
+            <span class="ss__t">{a}</span>
+            <i class="ss__bar" />
+          </li>
+        ))
+      }
+    </ol>
+  </figcaption>
+</figure>

@@ -1,0 +1,105 @@
+---
+/**
+ * Веб и цифровые продукты: каркас → интерфейс → адаптив → запуск.
+ * Браузер в актах 1–2 стоит по центру (сдвиг --sx), в акте 3 уступает место телефону.
+ */
+interface Props {
+  id: string;
+}
+const { id } = Astro.props;
+const cols = [56, 99, 142, 185, 228, 271, 314];
+---
+
+<g>
+  <g class="ss-shift" style="--sx: 55px">
+    <!-- Рамка браузера -->
+    <g class="ss-draw1">
+      <rect x="40" y="40" width="290" height="216" rx="5" class="ss-f"></rect>
+      <path d="M40 58H330" class="ss-l"></path>
+      <circle cx="52" cy="49" r="2.6" class="ss-cf"></circle>
+      <circle cx="61" cy="49" r="2.6" class="ss-dim"></circle>
+      <circle cx="70" cy="49" r="2.6" class="ss-dim"></circle>
+      <rect x="88" y="44" width="170" height="10" rx="5" class="ss-faint"></rect>
+    </g>
+
+    <!-- Акт 1: модульная сетка и каркас -->
+    <g class="ss-upto2">
+      {cols.map((x) => <path d={`M${x} 64V250`} class="ss-s ss-dash" />)}
+    </g>
+    <g class="ss-only1">
+      <rect x="56" y="68" width="258" height="70" rx="2" class="ss-s ss-dash"></rect>
+      <path d="M56 68L314 138M314 68L56 138" class="ss-s"></path>
+      {[56, 145, 234].map((x) => <rect x={x} y="146" width="80" height="52" rx="2" class="ss-s ss-dash" />)}
+      <path d="M56 214H220M56 226H160" class="ss-s ss-dash"></path>
+      <text x="60" y="80">HERO</text>
+      <text x="60" y="158">CARD</text>
+      <text x="149" y="158">CARD</text>
+      <text x="238" y="158">CARD</text>
+    </g>
+
+    <!-- Акт 2: настоящий интерфейс -->
+    <g class="ss-in2">
+      <rect x="60" y="74" width="132" height="10" rx="1.5" class="ss-iv"></rect>
+      <rect x="60" y="89" width="96" height="10" rx="1.5" class="ss-iv"></rect>
+      <rect x="60" y="106" width="118" height="3" class="ss-dim"></rect>
+      <rect x="60" y="113" width="92" height="3" class="ss-dim"></rect>
+    </g>
+    <rect x="60" y="122" width="48" height="12" rx="2" class="ss-cf ss-pop2" style="--d: .35s"></rect>
+    <g class="ss-in2" style="--d: .2s">
+      <rect x="214" y="70" width="100" height="64" rx="3" fill={`url(#ss-steel-${id})`} class="ss-l"></rect>
+      <path d="M220 126L246 100L262 114L276 104L308 126Z" class="ss-dim"></path>
+      <circle cx="292" cy="86" r="6" class="ss-dim"></circle>
+    </g>
+    {
+      [56, 145, 234].map((x, i) => (
+        <g class="ss-in2" style={`--d: ${0.45 + i * 0.15}s`}>
+          <rect x={x} y="146" width="80" height="52" rx="3" class="ss-f" />
+          <rect x={x + 6} y="152" width="68" height="20" rx="2" class="ss-faint" />
+          <rect x={x + 6} y="178" width="50" height="4" class="ss-dim" />
+          <rect x={x + 6} y="186" width="34" height="4" class="ss-faint" />
+        </g>
+      ))
+    }
+    <g class="ss-in2" style="--d: .9s">
+      <path d="M56 214H314" class="ss-s"></path>
+      <rect x="56" y="224" width="70" height="3" class="ss-dim"></rect>
+      <rect x="56" y="232" width="46" height="3" class="ss-faint"></rect>
+      <rect x="250" y="224" width="64" height="3" class="ss-faint"></rect>
+    </g>
+    <!-- Курсор нажимает CTA -->
+    <g class="ss-only2" style="--d: .3s">
+      <circle cx="84" cy="128" r="9" class="ss-c ss-ring" style="--d: 4.6s"></circle>
+      <path d="M86 130l0 13 3.5-3.5 2.6 5.6 2-1-2.6-5.4 5 0z" class="ss-iv"></path>
+    </g>
+
+    <!-- Акт 4: адрес и статус -->
+    <g class="ss-in4">
+      <path d="M95 46.5h5v5h-5z M96 46.5v-1.5a1.5 1.5 0 0 1 3 0v1.5" class="ss-l"></path>
+      <text x="106" y="52" class="ss-ti">https://product.app</text>
+      <rect x="276" y="44" width="46" height="10" rx="5" class="ss-faint"></rect>
+      <circle cx="284" cy="49" r="2.4" class="ss-cf ss-glow ss-blink"></circle>
+      <text x="291" y="52" class="ss-tc">LIVE</text>
+    </g>
+  </g>
+
+  <!-- Акт 3: та же страница на телефоне -->
+  <g class="ss-in3" style="--d: .25s">
+    <rect x="352" y="56" width="86" height="200" rx="13" class="ss-f"></rect>
+    <rect x="382" y="62" width="26" height="5" rx="2.5" class="ss-dim"></rect>
+    <rect x="362" y="78" width="58" height="8" rx="1.5" class="ss-iv"></rect>
+    <rect x="362" y="90" width="44" height="8" rx="1.5" class="ss-iv"></rect>
+    <rect x="362" y="104" width="66" height="40" rx="3" fill={`url(#ss-steel-${id})`} class="ss-l"></rect>
+    <rect x="362" y="150" width="40" height="11" rx="2" class="ss-cf"></rect>
+    {[168, 196, 224].map((y) => <rect x="362" y={y} width="66" height="22" rx="3" class="ss-faint" />)}
+  </g>
+  <g class="ss-only3" style="--d: .2s">
+    <path d="M338 156H348" class="ss-c"></path>
+    <text x="352" y="272">390 PX</text>
+    <text x="40" y="272">1440 PX</text>
+  </g>
+
+  <!-- Акт 4: проверки перед выкладкой -->
+  <g class="ss-in4" style="--d: .5s">
+    <text x="40" y="276"><tspan class="ss-tc">✓</tspan> BUILD   <tspan class="ss-tc">✓</tspan> TESTS   <tspan class="ss-tc">✓</tspan> DEPLOY</text>
+  </g>
+</g>

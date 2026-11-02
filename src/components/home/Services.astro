@@ -2,7 +2,7 @@
 import Lines from '@/components/ui/Lines.astro';
 import Eyebrow from '@/components/ui/Eyebrow.astro';
 import Arrow from '@/components/ui/Arrow.astro';
-import ServiceDiagram from '@/components/home/ServiceDiagram.astro';
+import ServiceScene from '@/components/home/services/ServiceScene.astro';
 import { t, type Locale } from '@/i18n';
 
 interface Props {
@@ -46,7 +46,7 @@ const items = dict.services.items;
                     <span class="label">{item.id.toUpperCase()}</span>
                   </div>
                   <div class="svc__diagram">
-                    <ServiceDiagram kind={item.id} />
+                    <ServiceScene kind={item.id} acts={item.acts} />
                   </div>
                   <p class="svc__desc">{item.description}</p>
                   <p class="label svc__deliver-label">{dict.services.deliverablesLabel}</p>

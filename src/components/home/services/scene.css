@@ -1,0 +1,357 @@
+/*
+ * Общие классы и ключевые кадры сцен услуг (ServiceScene.astro).
+ * Сцена длится --ss-dur и делится на четыре акта: 0–25 %, 25–50 %, 50–75 %, 75–100 %.
+ * Помощники:
+ *   ss-inN    — появляется в акте N и остаётся;     ss-onlyN — виден только в акте N;
+ *   ss-uptoN  — виден в актах 1…N;                  ss-drawN / ss-drawvN — прорисовка слева / сверху;
+ *   ss-growN  — растёт снизу (столбцы);             ss-popN  — «щелчок» появления с лёгким перелётом;
+ *   ss-run    — точка-пакет бежит по style="offset-path: path(…)" (длительность --run, задержка --d).
+ * Сдвиг внутри акта — style="--d: .4s". Без движения (нет .motion) все ss-in*, ss-draw* видны —
+ * это финальный кадр; ss-only1…3 и ss-upto* скрыты, ss-only4 виден.
+ */
+
+.ss {
+  --ss-dur: 12s;
+  position: relative;
+  margin: 0;
+  container-type: inline-size;
+}
+
+.ss__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  background: #0d1015;
+  box-shadow: inset 0 0 0 1px rgb(243 240 233 / 0.07);
+}
+
+.ss__video {
+  position: absolute;
+  inset: 0 0 auto;
+  width: 100%;
+  aspect-ratio: 480 / 300;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.ss .ss-grid {
+  stroke: rgb(243 240 233 / 0.045);
+  stroke-width: 1;
+}
+
+.ss__corners {
+  stroke: rgb(243 240 233 / 0.32);
+  stroke-width: 1;
+}
+
+.ss :is(.ss-l, .ss-s, .ss-f, .ss-c) {
+  vector-effect: non-scaling-stroke;
+  stroke-width: 1.2;
+}
+
+.ss .ss-l {
+  stroke: rgb(243 240 233 / 0.5);
+}
+
+.ss .ss-s {
+  stroke: rgb(243 240 233 / 0.18);
+}
+
+.ss .ss-f {
+  fill: #161a20;
+  stroke: rgb(243 240 233 / 0.6);
+}
+
+.ss .ss-c {
+  stroke: var(--coral);
+}
+
+.ss .ss-cf {
+  fill: var(--coral);
+}
+
+.ss .ss-iv {
+  fill: rgb(243 240 233 / 0.86);
+}
+
+.ss .ss-dim {
+  fill: rgb(243 240 233 / 0.26);
+}
+
+.ss .ss-faint {
+  fill: rgb(243 240 233 / 0.1);
+}
+
+.ss .ss-dash {
+  stroke-dasharray: 3 4;
+}
+
+.ss .ss-glow {
+  filter: drop-shadow(0 0 5px rgb(255 101 72 / 0.75));
+}
+
+.ss text {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  fill: var(--steel-light);
+  stroke: none;
+}
+
+.ss text.ss-tc {
+  fill: var(--coral);
+}
+
+.ss text.ss-ti {
+  fill: var(--ivory);
+}
+
+.ss text.ss-big {
+  font-size: 11px;
+}
+
+/* ——— Подписи актов ——— */
+
+.ss__acts ol {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.ss__acts li {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  font: 500 0.625rem/1.25 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ivory);
+}
+
+.ss__n {
+  color: var(--coral);
+}
+
+.ss__t {
+  min-height: 2.5em;
+}
+
+.ss__bar {
+  position: relative;
+  height: 1.5px;
+  background: rgb(243 240 233 / 0.14);
+  overflow: hidden;
+}
+
+.ss__bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--coral);
+  transform-origin: left;
+}
+
+@container (max-width: 430px) {
+  .ss__acts ol {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 10px;
+  }
+
+  .ss__t {
+    min-height: 0;
+  }
+}
+
+/* ——— Статичный (финальный) кадр ——— */
+
+.ss :is(.ss-only1, .ss-only2, .ss-only3, .ss-upto1, .ss-upto2, .ss-upto3) {
+  opacity: 0;
+}
+
+.ss :is(.ss-pop2, .ss-pop3, .ss-pop4, .ss-grow2, .ss-grow3, .ss-grow4, .ss-spin, .ss-ring, .ss-fly) {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.ss :is(.ss-grow2, .ss-grow3, .ss-grow4) {
+  transform-origin: bottom;
+}
+
+.ss .ss-run {
+  offset-rotate: 0deg;
+  opacity: 0;
+}
+
+/* ——— Движение ——— */
+
+.motion [data-active] .ss.is-playing .ss__cam {
+  transform-box: view-box;
+  transform-origin: 240px 150px;
+  animation: ss-cam var(--ss-dur) var(--ease-out) infinite both;
+}
+
+.motion [data-active] .ss.is-playing .ss__sweep {
+  animation: ss-sweep var(--ss-dur) linear infinite both;
+}
+
+.motion [data-active] .ss.is-playing :is(.ss-in1, .ss-in2, .ss-in3, .ss-in4, .ss-only1, .ss-only2, .ss-only3, .ss-only4, .ss-upto1, .ss-upto2, .ss-upto3, .ss-draw1, .ss-draw2, .ss-draw3, .ss-draw4, .ss-drawv1, .ss-drawv2, .ss-drawv3, .ss-drawv4, .ss-grow2, .ss-grow3, .ss-grow4, .ss-pop2, .ss-pop3, .ss-pop4) {
+  animation-duration: var(--ss-dur);
+  animation-timing-function: var(--ease-out);
+  animation-delay: var(--d, 0s);
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+}
+
+.motion [data-active] .ss.is-playing .ss-in1 { animation-name: ss-in1; }
+.motion [data-active] .ss.is-playing .ss-in2 { animation-name: ss-in2; }
+.motion [data-active] .ss.is-playing .ss-in3 { animation-name: ss-in3; }
+.motion [data-active] .ss.is-playing .ss-in4 { animation-name: ss-in4; }
+.motion [data-active] .ss.is-playing .ss-only1 { animation-name: ss-only1; }
+.motion [data-active] .ss.is-playing .ss-only2 { animation-name: ss-only2; }
+.motion [data-active] .ss.is-playing .ss-only3 { animation-name: ss-only3; }
+.motion [data-active] .ss.is-playing .ss-only4 { animation-name: ss-only4; }
+.motion [data-active] .ss.is-playing .ss-upto1 { animation-name: ss-only1; }
+.motion [data-active] .ss.is-playing .ss-upto2 { animation-name: ss-upto2; }
+.motion [data-active] .ss.is-playing .ss-upto3 { animation-name: ss-upto3; }
+.motion [data-active] .ss.is-playing .ss-draw1 { animation-name: ss-draw1; }
+.motion [data-active] .ss.is-playing .ss-draw2 { animation-name: ss-draw2; }
+.motion [data-active] .ss.is-playing .ss-draw3 { animation-name: ss-draw3; }
+.motion [data-active] .ss.is-playing .ss-draw4 { animation-name: ss-draw4; }
+.motion [data-active] .ss.is-playing .ss-drawv1 { animation-name: ss-drawv1; }
+.motion [data-active] .ss.is-playing .ss-drawv2 { animation-name: ss-drawv2; }
+.motion [data-active] .ss.is-playing .ss-drawv3 { animation-name: ss-drawv3; }
+.motion [data-active] .ss.is-playing .ss-drawv4 { animation-name: ss-drawv4; }
+.motion [data-active] .ss.is-playing .ss-grow2 { animation-name: ss-grow2; }
+.motion [data-active] .ss.is-playing .ss-grow3 { animation-name: ss-grow3; }
+.motion [data-active] .ss.is-playing .ss-grow4 { animation-name: ss-grow4; }
+.motion [data-active] .ss.is-playing .ss-pop2 { animation-name: ss-pop2; }
+.motion [data-active] .ss.is-playing .ss-pop3 { animation-name: ss-pop3; }
+.motion [data-active] .ss.is-playing .ss-pop4 { animation-name: ss-pop4; }
+
+/* Бесконечные «живые» детали: вращение, мигание, расходящиеся кольца, пакеты */
+.motion [data-active] .ss.is-playing .ss-spin {
+  animation: ss-spin var(--spin, 9s) linear infinite;
+}
+
+.motion [data-active] .ss.is-playing .ss-blink {
+  animation: ss-blink var(--blink, 1.4s) steps(2, jump-none) var(--d, 0s) infinite;
+}
+
+.motion [data-active] .ss.is-playing .ss-ring {
+  animation: ss-ring 1.8s var(--ease-out) var(--d, 0s) infinite both;
+}
+
+.motion [data-active] .ss.is-playing .ss-run {
+  animation: ss-run var(--run, 2.2s) cubic-bezier(0.45, 0, 0.25, 1) var(--d, 0s) infinite both;
+}
+
+.motion [data-active] .ss.is-playing .ss-shift {
+  animation: ss-shift var(--ss-dur) var(--ease-out) infinite both;
+}
+
+/* Линия «пульса» мониторинга: бесшовная прокрутка (период узора — 120 единиц) */
+.motion [data-active] .ss.is-playing .ss-pulse-line {
+  animation: ss-scroll 2.4s linear infinite;
+}
+
+@keyframes ss-scroll {
+  to { transform: translateX(-120px); }
+}
+
+/* Влёт к своему месту из смещения --fx/--fy (акт 1) */
+.motion [data-active] .ss.is-playing .ss-fly {
+  animation: ss-fly var(--ss-dur) cubic-bezier(0.16, 1, 0.3, 1) var(--d, 0s) infinite both;
+}
+
+@keyframes ss-fly {
+  0% { opacity: 0; transform: translate(var(--fx, 0), var(--fy, 0)) rotate(var(--fr, 0deg)); }
+  3% { opacity: 1; }
+  16%, 100% { opacity: 1; transform: none; }
+}
+
+/* Подписи актов: текущий ярко, пройденные приглушены, будущие тусклые; полоски заполняются */
+.motion [data-active] .ss.is-playing .ss__acts li {
+  animation: var(--ss-dur) linear infinite both;
+}
+
+.motion [data-active] .ss.is-playing .ss__acts li:nth-child(1) { animation-name: ss-act1; }
+.motion [data-active] .ss.is-playing .ss__acts li:nth-child(2) { animation-name: ss-act2; }
+.motion [data-active] .ss.is-playing .ss__acts li:nth-child(3) { animation-name: ss-act3; }
+.motion [data-active] .ss.is-playing .ss__acts li:nth-child(4) { animation-name: ss-act4; }
+
+.motion [data-active] .ss.is-playing .ss__acts li .ss__bar::after {
+  animation: var(--ss-dur) linear infinite both;
+}
+
+.motion [data-active] .ss.is-playing .ss__acts li:nth-child(1) .ss__bar::after { animation-name: ss-bar1; }
+.motion [data-active] .ss.is-playing .ss__acts li:nth-child(2) .ss__bar::after { animation-name: ss-bar2; }
+.motion [data-active] .ss.is-playing .ss__acts li:nth-child(3) .ss__bar::after { animation-name: ss-bar3; }
+.motion [data-active] .ss.is-playing .ss__acts li:nth-child(4) .ss__bar::after { animation-name: ss-bar4; }
+
+@keyframes ss-cam {
+  0% { opacity: 0; transform: scale(1.12) translate(10px, 6px); }
+  6% { opacity: 1; }
+  32% { transform: scale(1.03) translate(2px, 1px); }
+  94% { opacity: 1; transform: scale(1) translate(-4px, -2px); }
+  100% { opacity: 0; transform: scale(1) translate(-4px, -2px); }
+}
+
+@keyframes ss-sweep {
+  0%, 20% { transform: translateX(0); }
+  33% { transform: translateX(760px); }
+  33.01%, 70% { transform: translateX(0); }
+  83%, 100% { transform: translateX(760px); }
+}
+
+@keyframes ss-in1 { 0% { opacity: 0; transform: translateY(5px); } 5%, 100% { opacity: 1; transform: none; } }
+@keyframes ss-in2 { 0%, 25% { opacity: 0; transform: translateY(5px); } 30%, 100% { opacity: 1; transform: none; } }
+@keyframes ss-in3 { 0%, 50% { opacity: 0; transform: translateY(5px); } 55%, 100% { opacity: 1; transform: none; } }
+@keyframes ss-in4 { 0%, 75% { opacity: 0; transform: translateY(5px); } 80%, 100% { opacity: 1; transform: none; } }
+
+@keyframes ss-only1 { 0% { opacity: 0; } 5%, 22% { opacity: 1; } 27%, 100% { opacity: 0; } }
+@keyframes ss-only2 { 0%, 25% { opacity: 0; } 30%, 47% { opacity: 1; } 52%, 100% { opacity: 0; } }
+@keyframes ss-only3 { 0%, 50% { opacity: 0; } 55%, 72% { opacity: 1; } 77%, 100% { opacity: 0; } }
+@keyframes ss-only4 { 0%, 75% { opacity: 0; } 80%, 100% { opacity: 1; } }
+@keyframes ss-upto2 { 0% { opacity: 0; } 5%, 47% { opacity: 1; } 52%, 100% { opacity: 0; } }
+@keyframes ss-upto3 { 0% { opacity: 0; } 5%, 72% { opacity: 1; } 77%, 100% { opacity: 0; } }
+
+@keyframes ss-draw1 { 0% { clip-path: inset(0 100% 0 0); } 14%, 100% { clip-path: inset(0 0 0 0); } }
+@keyframes ss-draw2 { 0%, 25% { clip-path: inset(0 100% 0 0); } 39%, 100% { clip-path: inset(0 0 0 0); } }
+@keyframes ss-draw3 { 0%, 50% { clip-path: inset(0 100% 0 0); } 64%, 100% { clip-path: inset(0 0 0 0); } }
+@keyframes ss-draw4 { 0%, 75% { clip-path: inset(0 100% 0 0); } 89%, 100% { clip-path: inset(0 0 0 0); } }
+@keyframes ss-drawv1 { 0% { clip-path: inset(0 0 100% 0); } 14%, 100% { clip-path: inset(0 0 0 0); } }
+@keyframes ss-drawv2 { 0%, 25% { clip-path: inset(0 0 100% 0); } 39%, 100% { clip-path: inset(0 0 0 0); } }
+@keyframes ss-drawv3 { 0%, 50% { clip-path: inset(0 0 100% 0); } 64%, 100% { clip-path: inset(0 0 0 0); } }
+@keyframes ss-drawv4 { 0%, 75% { clip-path: inset(0 0 100% 0); } 89%, 100% { clip-path: inset(0 0 0 0); } }
+
+@keyframes ss-grow2 { 0%, 25% { transform: scaleY(0); } 36%, 100% { transform: none; } }
+@keyframes ss-grow3 { 0%, 50% { transform: scaleY(0); } 61%, 100% { transform: none; } }
+@keyframes ss-grow4 { 0%, 75% { transform: scaleY(0); } 86%, 100% { transform: none; } }
+
+@keyframes ss-pop2 { 0%, 25% { opacity: 0; transform: scale(0.6); } 29% { opacity: 1; transform: scale(1.06); } 32%, 100% { opacity: 1; transform: none; } }
+@keyframes ss-pop3 { 0%, 50% { opacity: 0; transform: scale(0.6); } 54% { opacity: 1; transform: scale(1.06); } 57%, 100% { opacity: 1; transform: none; } }
+@keyframes ss-pop4 { 0%, 75% { opacity: 0; transform: scale(0.6); } 79% { opacity: 1; transform: scale(1.06); } 82%, 100% { opacity: 1; transform: none; } }
+
+@keyframes ss-spin { to { transform: rotate(360deg); } }
+@keyframes ss-blink { 50% { opacity: 0.2; } }
+@keyframes ss-ring { 0% { opacity: 0.9; transform: scale(0.5); } 100% { opacity: 0; transform: scale(2.6); } }
+@keyframes ss-run {
+  0% { offset-distance: 0%; opacity: 0; }
+  12%, 85% { opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+
+/* Сдвиг «объекта» к финальному месту в акте 3 (браузер уступает место телефону и т. п.) */
+@keyframes ss-shift { 0%, 50% { transform: translateX(var(--sx, 0)); } 58%, 100% { transform: none; } }
+
+@keyframes ss-act1 { 0%, 24% { opacity: 1; } 25%, 100% { opacity: 0.5; } }
+@keyframes ss-act2 { 0%, 24% { opacity: 0.3; } 25%, 49% { opacity: 1; } 50%, 100% { opacity: 0.5; } }
+@keyframes ss-act3 { 0%, 49% { opacity: 0.3; } 50%, 74% { opacity: 1; } 75%, 100% { opacity: 0.5; } }
+@keyframes ss-act4 { 0%, 74% { opacity: 0.3; } 75%, 100% { opacity: 1; } }
+
+@keyframes ss-bar1 { 0% { transform: scaleX(0); } 25%, 96% { transform: none; } 100% { transform: scaleX(0); } }
+@keyframes ss-bar2 { 0%, 25% { transform: scaleX(0); } 50%, 96% { transform: none; } 100% { transform: scaleX(0); } }
+@keyframes ss-bar3 { 0%, 50% { transform: scaleX(0); } 75%, 96% { transform: none; } 100% { transform: scaleX(0); } }
+@keyframes ss-bar4 { 0%, 75% { transform: scaleX(0); } 96% { transform: none; } 100% { transform: scaleX(0); } }

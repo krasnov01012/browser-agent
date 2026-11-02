@@ -90,6 +90,7 @@ const e = t(locale).contact.errors;
       <span class="check__box" aria-hidden="true"></span>
       <span class="check__text" data-status="draft">
         {f.consent}
+        <a class="check__link" href={localizePath('/consent/', locale)}>{f.consentDoc}</a>,
         <a class="check__link" href={localizePath('/privacy/', locale)}>{f.privacy}</a>
       </span>
     </label>

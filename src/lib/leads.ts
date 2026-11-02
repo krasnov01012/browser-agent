@@ -1,7 +1,7 @@
 /*
  * Контракт приёма заявок — общий для короткой формы и Project Architect.
- * Бэкенд ещё не выбран (D23 PROPOSED); фронтенд отправляет ровно этот JSON
- * на PUBLIC_LEADS_ENDPOINT. Требования к серверу — docs/brief/06_FORMS.md.
+ * Фронтенд отправляет этот JSON на PUBLIC_LEADS_ENDPOINT — релей `server/leads-relay.mjs`,
+ * который пересылает заявку в Telegram-бот и ничего не хранит (docs/DEPLOY_LEADS.md).
  */
 import type { Locale } from '@/i18n';
 
@@ -44,7 +44,7 @@ export type SubmitResult =
   | { status: 'rejected'; fields?: string[] }
   | { status: 'error' };
 
-export const CONSENT_VERSION = 'draft-2026-10';
+export const CONSENT_VERSION = 'draft-2026-11-v2';
 
 export const validators = {
   name: (v: string): boolean => v.trim().length >= 2 && v.trim().length <= 80,

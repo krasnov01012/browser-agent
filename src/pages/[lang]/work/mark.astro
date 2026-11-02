@@ -23,7 +23,7 @@ const locale = Astro.params.lang as Locale;
 const c = mark[locale];
 ---
 
-<Base locale={locale} path="/work/mark/" title={c.meta.title} description={c.meta.description} noindex>
+<Base locale={locale} path="/work/mark/" title={c.meta.title} description={c.meta.description} noindex={import.meta.env.PUBLIC_INDEX_CASES !== '1'}>
   <MarkHero locale={locale} />
 
   <section class="section theme-light m-ch" data-scene="challenge" aria-labelledby="m-ch-title">

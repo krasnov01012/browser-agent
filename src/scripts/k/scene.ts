@@ -16,6 +16,10 @@ import {
   Color,
   DirectionalLight,
   DoubleSide,
+  EdgesGeometry,
+  Float32BufferAttribute,
+  LineBasicMaterial,
+  LineSegments,
   ExtrudeGeometry,
   Group,
   Mesh,
@@ -66,9 +70,9 @@ function buildEnvironment(renderer: WebGLRenderer): Texture {
     env.add(m);
   };
   const white = new Color('#fffdf8');
-  panel(16, 9, white, 3.4, [-5, 8, 9]); //      ключевой софтбокс сверху слева
+  panel(16, 9, white, 2.5, [-5, 8, 9]); //      ключевой софтбокс сверху слева
   panel(14, 6, white, 1.6, [6, 3, 11]); //      фронтальная заливка справа
-  panel(2, 18, white, 5, [10, 0, 1]); //        вертикальная контровая полоса справа
+  panel(2, 18, white, 3.6, [10, 0, 1]); //        вертикальная контровая полоса справа
   panel(18, 4, white, 0.9, [0, -9, 5]); //      мягкий нижний рефлекс
   panel(6, 0.8, new Color('#ff6548'), 1.6, [-9, -4, 4]); // узкая коралловая полоса: тёплый рефлекс на фасках
   panel(10, 10, new Color('#9aa3c7'), 0.5, [4, 6, -10]); //  холодный задний рефлекс «стали»
@@ -86,20 +90,38 @@ function extrude(points: Vec2[], halfDepth: number): ExtrudeGeometry {
   shape.moveTo(pts[0]![0], pts[0]![1]);
   for (const p of pts.slice(1)) shape.lineTo(p[0], p[1]);
   shape.closePath();
-  const bevelThickness = 0.032;
-  const bevelSize = 0.02;
+  const bevelThickness = 0.045;
+  const bevelSize = 0.03;
   const geo = new ExtrudeGeometry(shape, {
     depth: halfDepth * 2 - bevelThickness * 2,
     bevelEnabled: true,
     bevelThickness,
     bevelSize,
     bevelOffset: -bevelSize, // силуэт совпадает с контуром v02 точно, фаска уходит внутрь
-    bevelSegments: 3,
+    bevelSegments: 4,
     curveSegments: 1,
   });
   geo.translate(0, 0, -(halfDepth - bevelThickness));
   geo.computeVertexNormals();
+  shade(geo);
   return geo;
+}
+
+/**
+ * Вершинное затемнение: металл темнеет к узлу (как окклюзия в стыке на референсе) и светлеет к концам.
+ * Множитель к цвету материала, на форму не влияет.
+ */
+function shade(geo: ExtrudeGeometry): void {
+  const [jx, jy] = toWorld(joint);
+  const pos = geo.getAttribute('position');
+  const colors = new Float32Array(pos.count * 3);
+  for (let i = 0; i < pos.count; i++) {
+    const d = Math.hypot(pos.getX(i) - jx, pos.getY(i) - jy);
+    const t = Math.min(1, d / 3.4);
+    const v = 0.5 + 0.5 * t * t * (3 - 2 * t);
+    colors[i * 3] = colors[i * 3 + 1] = colors[i * 3 + 2] = v;
+  }
+  geo.setAttribute('color', new Float32BufferAttribute(colors, 3));
 }
 
 function metal(rough: Texture, angle: number, tint: string, roughness: number): MeshPhysicalMaterial {
@@ -110,6 +132,7 @@ function metal(rough: Texture, angle: number, tint: string, roughness: number): 
   map.repeat.set(1.6, 1.6);
   return new MeshPhysicalMaterial({
     color: new Color(tint),
+    vertexColors: true,
     metalness: 1,
     roughness,
     roughnessMap: map,
@@ -117,7 +140,7 @@ function metal(rough: Texture, angle: number, tint: string, roughness: number): 
     anisotropyRotation: angle,
     clearcoat: 0.4,
     clearcoatRoughness: 0.22,
-    envMapIntensity: 1.25,
+    envMapIntensity: 1.1,
   });
 }
 
@@ -137,8 +160,8 @@ function seam(a: Vec2, b: Vec2, z: number, glowTex: Texture) {
     new MeshBasicMaterial({ color: CORAL.clone().multiplyScalar(1.25), toneMapped: false, transparent: true }),
   );
   const halo = new Mesh(
-    new PlaneGeometry(len + 0.2, 0.34).translate(len / 2, 0, 0.002),
-    new MeshBasicMaterial({ map: glowTex, color: CORAL, transparent: true, opacity: 0.55, blending: AdditiveBlending, depthWrite: false, toneMapped: false }),
+    new PlaneGeometry(len + 0.2, 0.5).translate(len / 2, 0, 0.002),
+    new MeshBasicMaterial({ map: glowTex, color: CORAL, transparent: true, opacity: 0.7, blending: AdditiveBlending, depthWrite: false, toneMapped: false }),
   );
   pivot.add(core, halo);
   return { pivot, core, halo };
@@ -156,6 +179,9 @@ export class KScene {
   private jointGlow: Mesh;
   private jointLight: PointLight;
   private chevron: Mesh[] = [];
+  private spill: PointLight[] = [];
+  private outlines: LineSegments[] = [];
+  private floor!: Mesh;
 
   private time = 0;
   private speed = 1;
@@ -205,8 +231,42 @@ export class KScene {
     // — Швы и узел —
     const upperFront = depth.beam - 0.022 + 0.004;
     const lowerFront = depth.beam + 0.004;
-    this.seamParts = [seam(seams.upper[0], seams.upper[1], upperFront, glowTex), seam(seams.lower[0], seams.lower[1], lowerFront, glowTex)];
+    const stemFront = depth.stem + 0.004;
+    this.seamParts = [
+      seam(seams.upper[0], seams.upper[1], upperFront, glowTex),
+      seam(seams.lower[0], seams.lower[1], lowerFront, glowTex),
+      seam(seams.stemUp[0], seams.stemUp[1], stemFront, glowTex),
+      seam(seams.stemDown[0], seams.stemDown[1], stemFront, glowTex),
+    ];
     for (const s of this.seamParts) this.model.add(s.pivot);
+
+    // Отражённый свет швов на соседнем металле: по одному мягкому источнику вдоль каждой балки.
+    for (const [a, b] of [
+      [seams.upper[0], seams.upper[1]],
+      [seams.lower[0], seams.lower[1]],
+    ] as [Vec2, Vec2][]) {
+      const [ax, ay] = toWorld(a);
+      const [bx, by] = toWorld(b);
+      const light = new PointLight(CORAL, 0, 2.6, 2);
+      light.position.set(ax + (bx - ax) * 0.3, ay + (by - ay) * 0.3, depth.beam + 0.35);
+      this.spill.push(light);
+      this.model.add(light);
+    }
+
+    // Контур-чертёж: детали сначала «проявляются» линиями, потом заполняются металлом.
+    for (const p of this.parts) {
+      const lines = new LineSegments(new EdgesGeometry(p.mesh.geometry, 20), new LineBasicMaterial({ color: 0xf3f0e9, transparent: true, opacity: 0, depthWrite: false }));
+      p.mesh.add(lines);
+      this.outlines.push(lines);
+    }
+
+    // Свечение у основания знака — тёплый отсвет на «полу», как на кадрах motion study.
+    this.floor = new Mesh(
+      new PlaneGeometry(5.6, 1.1),
+      new MeshBasicMaterial({ map: radialGlow(), color: new Color('#ffb59f'), transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false, toneMapped: false }),
+    );
+    this.floor.position.set(0.1, toWorld([0, 880])[1], -0.4);
+    this.model.add(this.floor);
 
     const [jx, jy] = toWorld(joint);
     // Яркость ×1.15: красный канал упирается в 1, но оттенок остаётся коралловым, а не персиковым.
@@ -361,17 +421,27 @@ export class KScene {
     for (const bar of this.chevron) (bar.material as MeshBasicMaterial).opacity = range(t, 4.3, 4.8);
 
     const draw = ease.inOutCubic(range(t, 4.2, 5.4));
-    for (const s of this.seamParts) {
+    this.seamParts.forEach((s, i) => {
+      const k = i < 2 ? 1 : 0.7; // короткие швы опоры чуть тише
       s.pivot.scale.set(Math.max(0.0001, draw), 1, 1);
-      (s.core.material as MeshBasicMaterial).opacity = range(t, 4.2, 4.5);
-      (s.halo.material as MeshBasicMaterial).opacity = 0.5 * draw;
-    }
+      (s.core.material as MeshBasicMaterial).opacity = range(t, 4.2, 4.5) * k;
+      (s.halo.material as MeshBasicMaterial).opacity = 0.7 * draw * k;
+    });
+    for (const light of this.spill) light.intensity = 1.1 * draw;
+
+    // Контур виден, пока деталь собирается, и гаснет, когда металл заполнен.
+    this.outlines.forEach((line, i) => {
+      const w = this.parts[i]!.window[0];
+      (line.material as LineBasicMaterial).opacity = 0.75 * range(t, w - 0.3, w + 0.5) * (1 - ease.inOutCubic(range(t, 3.4, 4.8)));
+    });
+    (this.floor.material as MeshBasicMaterial).opacity = 0.2 * ease.outCubic(range(t, 4.4, 6.2));
 
     // Блик по металлу и выход во фронтальный ракурс
     const settle = ease.inOutCubic(range(t, 0.4, 6.6));
     // Блик проходит по металлу, но без пересвета: диапазон поворота окружения ограничен.
     this.scene.environmentRotation.y = lerp(-0.5, 0.1, ease.inOutCubic(range(t, 3.6, 7)));
-    this.model.rotation.set(lerp(0.1, 0, settle), lerp(-0.42, 0, settle), 0);
+    // Покой — почти фронтально, но с лёгким доворотом (≈4°): видна толщина и фаска опоры, как на референсе.
+    this.model.rotation.set(lerp(0.1, 0.03, settle), lerp(-0.42, 0.07, settle), 0);
     this.model.position.z = lerp(-0.6, 0, settle);
   }
 }

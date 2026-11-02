@@ -1,45 +1,22 @@
 ---
 /**
- * Политика конфиденциальности — ЗАГЛУШКА. Текст пишется под фактического оператора
- * данных, юрисдикцию и реальную схему хранения заявок, затем проходит юридическую
- * проверку (docs/brief/06_FORMS.md). До этого страница не индексируется.
+ * Политика обработки персональных данных — ЧЕРНОВИК-шаблон (src/content/legal.ts).
+ * Поля [[…]] заполняет владелец, затем юридическая проверка (docs/LEGAL_GUIDE.md).
+ * До запуска (PUBLIC_INDEXING != 1) страница не индексируется.
  */
 import Base from '@/layouts/Base.astro';
-import { locales, t, type Locale } from '@/i18n';
+import LegalBody from '@/components/LegalBody.astro';
+import { policy } from '@/content/legal';
+import { locales, type Locale } from '@/i18n';
 
 export function getStaticPaths() {
   return locales.map((lang) => ({ params: { lang } }));
 }
 const locale = Astro.params.lang as Locale;
-const dict = t(locale);
+const doc = policy[locale];
+const noindex = import.meta.env.PUBLIC_INDEXING !== '1';
 ---
 
-<Base locale={locale} path="/privacy/" title={`${dict.privacy.title} — Krasnoff Development`} noindex>
-  <section class="section theme-light legal" data-status="placeholder">
-    <div class="shell">
-      <p class="label label--accent">Legal / draft</p>
-      <h1 class="h2">{dict.privacy.title}</h1>
-      <p class="lead">{dict.privacy.draft}</p>
-    </div>
-  </section>
+<Base locale={locale} path="/privacy/" title={`${doc.title} — Krasnoff Development`} noindex={noindex}>
+  <LegalBody doc={doc} />
 </Base>
-
-<style>
-  .legal {
-    min-height: 80svh;
-    padding-top: calc(var(--header-h) + var(--section-y));
-  }
-
-  .legal .shell {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 28px;
-    max-width: 960px;
-    margin-left: 0;
-  }
-
-  /* «КОНФИДЕНЦИАЛЬНОСТИ» — 18 букв: кегль от ширины экрана */
-  .legal .h2 {
-    font-size: clamp(1.375rem, 6.8vw, 5rem);
-  }
-</style>

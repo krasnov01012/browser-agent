@@ -33,7 +33,7 @@ export const en: Dict = {
   hero: {
     eyebrow: 'Custom software engineering',
     titleLines: ['Software.', 'Built', 'for you'],
-    lead: 'Custom software, AI and digital products — from concept to launch and ongoing support.',
+    lead: 'Digital products, business systems and AI — from concept to launch and ongoing support.',
     ctaPrimary: 'Start a project',
     ctaSecondary: 'Explore work',
     capabilitiesLabel: 'Capabilities',
@@ -49,7 +49,7 @@ export const en: Dict = {
   services: {
     eyebrow: ['02', 'Services'],
     titleLines: ['What', 'we build'],
-    lead: 'From a first product to the systems a business runs on. Every engagement is scoped individually — architecture, build, launch and support.',
+    lead: 'From a first product to the systems a business runs on. Every engagement is scoped on its own: architecture, build, launch, support.',
     deliverablesLabel: 'What it covers',
     cta: 'Discuss this service',
     items: [
@@ -139,7 +139,7 @@ export const en: Dict = {
     eyebrow: ['04', 'About'],
     titleLines: ['How we', 'engineer'],
     studio:
-      'Krasnoff Development is an independent software studio led by its founder. One accountable engineering lead from architecture to launch and support — and business-level clarity at every step.',
+      'Krasnoff Development is an independent software studio run by its founder. One engineer is accountable for the outcome, from architecture to launch and support — and we talk in terms of your business, not our stack.',
     principles: [
       {
         title: 'The business problem first',
@@ -245,8 +245,8 @@ export const en: Dict = {
     modes: { quick: 'Quick inquiry', brief: 'Project brief' },
     eyebrow: ['06', 'Contact'],
     titleLines: ['Have an idea?', 'Let’s build it.'],
-    lead: 'Tell us about the task in a few sentences and choose how you’d like a reply — Telegram or email. No calls required.',
-    next: 'What happens next: we review the request and reply via your chosen channel, with clarifying questions if needed.',
+    lead: 'Describe the task in a few sentences and pick where you’d like the reply — Telegram or email. No call needed.',
+    next: 'What happens next: I review the request personally and reply via your chosen channel, with clarifying questions if needed.',
     noPrice: 'No public pricing: every proposal is prepared for the specific project.',
     form: {
       name: 'Your name',
@@ -262,8 +262,9 @@ export const en: Dict = {
       messagePlaceholder: 'What needs to be built, for whom, and what exists already',
       context: 'Context',
       removeContext: 'Remove context',
-      consent: 'I agree to the processing of the data I submit in order to receive a reply.',
+      consent: 'I consent to the processing of my personal data (name, contact, request text), including its transfer via Telegram, in order to receive a reply.',
       privacy: 'Privacy policy',
+      consentDoc: 'consent text',
       submit: 'Send inquiry',
       sending: 'Sending…',
       required: 'required',
@@ -277,9 +278,9 @@ export const en: Dict = {
       summary: 'Please check the highlighted fields.',
     },
     states: {
-      success: 'Request received and stored. We’ll reply via your chosen channel.',
+      success: 'Request sent. We’ll reply via your chosen channel.',
       telegramNote:
-        'A bot can’t message you first from a @username alone. Once the studio bot is connected, a button to open the conversation will appear here.',
+        'We’ll message you on Telegram ourselves — make sure your privacy settings allow messages from new accounts.',
       error: 'Couldn’t send the request. Your text is still in the form — please try again a little later.',
       notConfigured:
         'Preview build: request intake is not connected yet, nothing was sent. Your text is still in the form.',
@@ -292,6 +293,7 @@ export const en: Dict = {
     langTitle: 'Language',
     legalTitle: 'Legal',
     privacy: 'Privacy policy',
+    consent: 'Consent to data processing',
     rights: 'Krasnoff Development',
     build: 'Build',
     top: 'Back to top',

@@ -23,7 +23,7 @@ const locale = Astro.params.lang as Locale;
 const c = seshat[locale];
 ---
 
-<Base locale={locale} path="/work/seshat/" title={c.meta.title} description={c.meta.description} noindex>
+<Base locale={locale} path="/work/seshat/" title={c.meta.title} description={c.meta.description} noindex={import.meta.env.PUBLIC_INDEX_CASES !== '1'}>
   <SeshatHero locale={locale} />
   <SeshatChallenge locale={locale} />
   <SeshatExperience locale={locale} />

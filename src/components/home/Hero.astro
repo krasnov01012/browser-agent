@@ -171,6 +171,21 @@ const geo = describe();
     opacity: 1;
   }
 
+  /* Отражение на полу плавно уходит в фон: пол лежит на ~69% высоты кадра. */
+  .k-stage__canvas {
+    -webkit-mask-image: linear-gradient(to bottom, #000 66%, rgba(0, 0, 0, 0.55) 78%, transparent 97%);
+    mask-image: linear-gradient(to bottom, #000 66%, rgba(0, 0, 0, 0.55) 78%, transparent 97%);
+  }
+
+  /* Новый знак стоит в ракурсе, поэтому плоские размерные метки и узлы чертежа под ним не показываем:
+     остаются сетка и construction-окружность как фон. В fallback чертёж целиком совпадает с постером. */
+  .k-stage[data-state='live'] :global(.kb-dims),
+  .k-stage[data-state='live'] :global(.kb-nodes),
+  .k-stage[data-state='live'] :global(.kb-construct > :not(.kb-dash)) {
+    opacity: 0;
+    transition: opacity 600ms var(--ease-out);
+  }
+
   .k-stage[data-state='fallback'] .k-stage__canvas {
     display: none;
   }

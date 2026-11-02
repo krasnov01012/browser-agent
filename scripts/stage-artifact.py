@@ -29,7 +29,7 @@ for junk in ('404.html', 'robots.txt', 'index.html'):
         os.remove(p)
 os.rename(os.path.join(out, '_astro'), os.path.join(out, 'assets'))
 
-PAGE = re.compile(r'^/(ru|en)/((?:work/(?:seshat|mark)/|privacy/)?)$')
+PAGE = re.compile(r'^/(ru|en)/((?:work/(?:seshat|mark)/|privacy/|consent/)?)$')
 ATTR = re.compile(r'(\s(?:href|src))="(/[^"]*)"')
 
 

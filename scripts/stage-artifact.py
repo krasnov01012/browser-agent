@@ -5,7 +5,8 @@
   * _astro/ → assets/ (имена с «_» зарезервированы службой артефактов);
   * ссылки на страницы '/ru/work/mark/' → '…/ru/work/mark/index.html' (каталоги не раскрываются);
   * в CSS url(/_astro/…) → url(./…);
-  * в JS базовый путь modulepreload Vite ('/'+dep) → относительно самого модуля;
+  * в JS базовый путь modulepreload Vite ('/'+dep) → относительно самого модуля,
+    URL ассетов '/_astro/x' → './x' (код разрешает их от import.meta.url);
   * main.html — главная RU без doctype/html/head/body (обёртку добавляет публикация);
   * files.json — готовая карта `files` для Artifact publish (пути относительно out/).
 
@@ -70,7 +71,10 @@ for root, _, names in os.walk(out):
             css = open(full, encoding='utf-8').read().replace('url(/_astro/', 'url(./')
             open(full, 'w', encoding='utf-8').write(css)
         elif name.endswith('.js'):
-            js = fix_assets(open(full, encoding='utf-8').read())
+            # URL ассетов из `?url`-импортов ('/_astro/x.hdr') код разрешает через new URL(…, import.meta.url):
+            # модули лежат рядом с ассетами, поэтому достаточно относительного './x.hdr'.
+            js = re.sub(r'([`"\'])/_astro/', r'\1./', open(full, encoding='utf-8').read())
+            js = fix_assets(js)
             js = re.sub(r'function\((\w)\)\{return`/`\+\1\}', r'function(\1){return new URL(`../`+\1,import.meta.url).href}', js)
             open(full, 'w', encoding='utf-8').write(js)
         if name.endswith('.woff2'):

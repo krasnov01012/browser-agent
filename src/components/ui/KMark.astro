@@ -1,7 +1,9 @@
 ---
 /**
- * Плоская K v02 из geometry.json (координаты 1000×1000, обрезано до знака).
- * Используется в шапке, подвале и favicon — не замена 3D-знаку в Hero.
+ * Плоская «Modular K» (v03) — модули из src/scripts/k/modular.ts в том же пространстве 1000×1000.
+ * Упрощена для размеров 16–60 px: тонкая планка S3 слита с опорой, каждый модуль сжат внутрь на 6 единиц
+ * (щели ≈ 20–25 единиц — видны уже в шапке 30 px). Коралловая диагональная вставка S4 — «светящийся шов»
+ * 3D-знака. Используется в шапке, подвале, 404 и favicon — не замена 3D-знаку в Hero.
  */
 interface Props {
   class?: string;
@@ -12,13 +14,15 @@ const { class: className, title } = Astro.props;
 
 <svg
   class:list={['kmark', className]}
-  viewBox="236 115 601 770"
+  viewBox="123 125 754 750"
   role={title ? 'img' : undefined}
   aria-hidden={title ? undefined : 'true'}
   aria-label={title}
 >
-  <polygon points="363,470 675,125 827,125 426,526" fill="currentColor" opacity="0.78"></polygon>
-  <polygon points="363,530 426,474 827,875 675,875" fill="currentColor" opacity="0.92"></polygon>
-  <polygon points="246,125 363,125 363,875 246,875" fill="currentColor"></polygon>
-  <rect class="kmark__joint" x="336" y="464" width="72" height="72" transform="rotate(45 372 500)" fill="var(--coral)"></rect>
+  <polygon points="217,131 361,131 361,307" fill="currentColor" opacity="0.82"></polygon>
+  <polygon points="129,131 185,131 361,341 361,618 129,405" fill="currentColor"></polygon>
+  <polygon class="kmark__seam" points="129,437 361,651 361,693 129,480" fill="var(--coral)"></polygon>
+  <polygon points="129,513 361,726 361,869 129,869" fill="currentColor"></polygon>
+  <polygon points="396,427 653,170 871,170 871,178 573,472 396,472" fill="currentColor" opacity="0.8"></polygon>
+  <polygon points="396,538 572,538 871,860 871,869 668,869 396,596" fill="currentColor" opacity="0.92"></polygon>
 </svg>

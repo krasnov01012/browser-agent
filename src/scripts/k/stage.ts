@@ -48,7 +48,7 @@ export async function initKStage(): Promise<void> {
     const { KScene } = await import('./scene');
     const coarse = matchMedia('(pointer: coarse)').matches;
     let lastHud = 0;
-    scene = new KScene({
+    scene = await KScene.create({
       canvas,
       still,
       lowPower: coarse || innerWidth < 768,

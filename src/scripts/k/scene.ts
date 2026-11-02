@@ -32,6 +32,7 @@ import {
 } from 'three';
 import { toWorld, contours } from './geometry';
 import { buildK, CORAL, type KModel } from './build';
+import { loadStudio, type StudioAssets } from './materials';
 import { radialGlow } from './textures';
 import type { KSceneOptions } from './types';
 import { clamp, ease, lerp, range } from '../motion';
@@ -46,6 +47,11 @@ const OFFSET_Y = 0.78;
 /** Ракурс покоя (как в ролике): камера чуть справа и сверху — видны торцы модулей и толщина балок. */
 const REST_YAW = -0.22;
 const REST_PITCH = 0.07;
+/** Яркость студийного HDRI (studio.hdr уже затемнён при подготовке, см. scripts/build-k-materials.mjs). */
+const ENV_INTENSITY = 1.6;
+/** Поворот студии: в начале сборки и в покое (подобран по рендерам: градиент по опоре, блики на кромках). */
+const ENV_YAW_FROM = 1.0;
+const ENV_YAW_REST = 3.15;
 
 /** Студийное окружение: тёмная комната, острые софтбоксы — контрастные блики на гранях. */
 function buildEnvironment(renderer: WebGLRenderer): Texture {
@@ -87,6 +93,7 @@ export class KScene {
   private spill: PointLight[] = [];
   private haze: Mesh;
   private floor: Mesh;
+  private envYaw: [number, number];
 
   private time = 0;
   private speed = 1;
@@ -101,26 +108,49 @@ export class KScene {
   private scroll = 0;
   private scrollSmooth = 0;
 
-  constructor(private opts: KSceneOptions) {
+  /** Сцена со студийным HDRI и картами стали; если они не успели за ~3.5 с или не загрузились — на процедурных. */
+  static async create(opts: KSceneOptions): Promise<KScene> {
     const { canvas, lowPower } = opts;
-    this.renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance', premultipliedAlpha: true });
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio, lowPower ? 1.5 : 2));
+    const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance', premultipliedAlpha: true });
+    // На экранах с DPR 1 рендерим с запасом (×1.5): тонкие светящиеся щели и блики кромок без «лесенки».
+    renderer.setPixelRatio(lowPower ? Math.min(devicePixelRatio, 1.5) : Math.min(Math.max(devicePixelRatio, 1.5), 2));
+    let assets: StudioAssets | null = null;
+    try {
+      assets = await Promise.race([
+        loadStudio(renderer),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 3500)),
+      ]);
+    } catch (error) {
+      console.warn('[k] studio assets unavailable, using procedural materials', error);
+    }
+    return new KScene(opts, renderer, assets);
+  }
+
+  private constructor(
+    private opts: KSceneOptions,
+    renderer: WebGLRenderer,
+    assets: StudioAssets | null,
+  ) {
+    this.renderer = renderer;
     this.renderer.toneMapping = NeutralToneMapping;
     this.renderer.toneMappingExposure = 1.05;
     this.renderer.setClearColor(0x000000, 0);
 
-    this.scene.environment = buildEnvironment(this.renderer);
-    this.scene.environmentRotation.set(0, -0.5, 0);
+    this.scene.environment = assets?.environment ?? buildEnvironment(this.renderer);
+    this.scene.environmentIntensity = assets ? ENV_INTENSITY : 1;
+    // Процедурная студия (запасной путь) настроена под свой поворот
+    this.envYaw = assets ? [ENV_YAW_FROM, ENV_YAW_REST] : [-0.5, 0.15];
 
-    const key = new DirectionalLight(0xffffff, 1.5);
+    const key = new DirectionalLight(0xffffff, assets ? 0.8 : 1.5);
     key.position.set(-3, 5, 6);
     const rim = new DirectionalLight(0xdfe3ea, 0.5);
     rim.position.set(6, 2, -4);
     this.scene.add(key, rim);
 
     // — Модель и её отражение на полу —
-    this.main = buildK({ ghost: false });
-    this.mirror = buildK({ ghost: true });
+    const steel = assets?.steel ?? null;
+    this.main = buildK({ ghost: false, steel });
+    this.mirror = buildK({ ghost: true, steel });
     const floorY = toWorld(contours.stem[2])[1];
     this.mirror.root.scale.y = -1;
     this.mirror.root.position.y = 2 * floorY;
@@ -273,7 +303,8 @@ export class KScene {
 
     // Блик проходит по металлу и знак встаёт в ракурс покоя
     const settle = ease.inOutCubic(range(t, 0.3, 6.6));
-    this.scene.environmentRotation.y = lerp(-0.5, 0.15, ease.inOutCubic(range(t, 3.6, 7)));
+    // Софтбоксы студии проходят по граням (блики «едут» по металлу) и встают в ракурс покоя
+    this.scene.environmentRotation.y = lerp(this.envYaw[0], this.envYaw[1], ease.inOutCubic(range(t, 3.6, 7)));
     this.rig.rotation.set(lerp(-0.12, REST_PITCH, settle), lerp(0.45, REST_YAW, settle), 0);
     this.rig.position.z = lerp(-0.8, 0, settle);
   }

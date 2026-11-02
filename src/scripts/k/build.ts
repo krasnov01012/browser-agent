@@ -28,18 +28,24 @@ import {
   Vector2,
   Vector3,
 } from 'three';
+import { toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { toWorld } from './geometry';
 import { constructionLines, gapSeams, inlays, modules, nodePoint, type ModuleDef } from './modular';
+import type { SteelMaps } from './materials';
 import { bandGlow, radialGlow, scratchedMetal } from './textures';
 import type { Vec2 } from './types';
 import { ease, range } from '../motion';
 
 export const CORAL = new Color('#ff6548');
 const HOT = new Color('#ffc4a3');
+/** Сколько повторов текстуры стали на мировую единицу (знак ≈ 4.5 единицы в высоту). */
+const STEEL_REPEAT = 0.34;
 
 export interface BuildOptions {
   /** Зеркальное отражение на полу: темнее, без строительных линий и пролетающих деталей. */
   ghost: boolean;
+  /** Карты настоящей стали (materials.ts); null — процедурные карты textures.ts. */
+  steel: SteelMaps | null;
 }
 
 export interface KModel {
@@ -63,22 +69,37 @@ function rng(seed: number): () => number {
 
 const W = (p: Vec2): Vec2 => toWorld(p);
 
-/** Плита по контуру с плоской фаской (как фрезерованная кромка); центрирована по z. */
-function slab(points: Vec2[], thickness: number, bevel = 0.026): ExtrudeGeometry {
+/**
+ * Плита по контуру со скруглённой кромкой (как у обработанной стальной заготовки); центрирована по z.
+ * Сглаженные нормали на скруглении дают тонкий яркий блик по каждому ребру, острые углы остаются острыми.
+ * bevel = 0 — плита без кромки (для контурной обводки).
+ */
+function slab(points: Vec2[], thickness: number, bevel = 0.03): BufferGeometry {
   const shape = new Shape(points.map((p) => new Vector2(p[0], p[1])));
   const bt = Math.min(bevel, thickness / 2 - 0.002);
   const geo = new ExtrudeGeometry(shape, {
     depth: thickness - bt * 2,
-    bevelEnabled: true,
+    bevelEnabled: bevel > 0,
     bevelThickness: bt,
     bevelSize: bevel,
     bevelOffset: -bevel,
-    bevelSegments: 1,
+    bevelSegments: 4,
     curveSegments: 1,
   });
   geo.translate(0, 0, -(thickness / 2 - bt));
-  geo.computeVertexNormals();
-  return geo;
+  return bevel > 0 ? toCreasedNormals(geo, 0.5) : geo;
+}
+
+/** Направление шлифовки: поворот UV модуля (текстуры общие, без копий на каждый угол). */
+function brushUV(geo: BufferGeometry, angle: number): void {
+  const uv = geo.getAttribute('uv');
+  const c = Math.cos(angle) * STEEL_REPEAT;
+  const s = Math.sin(angle) * STEEL_REPEAT;
+  for (let i = 0; i < uv.count; i++) {
+    const u = uv.getX(i);
+    const v = uv.getY(i);
+    uv.setXY(i, u * c - v * s, u * s + v * c);
+  }
 }
 
 /** Мягкое затемнение к узлу (окклюзия в стыке): множитель цвета 0.7–1. */
@@ -94,34 +115,38 @@ function shade(geo: BufferGeometry): void {
   geo.setAttribute('color', new Float32BufferAttribute(colors, 3));
 }
 
-let metalMaps: ReturnType<typeof scratchedMetal> | null = null;
-const mapClones = new Map<string, Texture[]>();
+let fallbackMaps: ReturnType<typeof scratchedMetal> | null = null;
 
-/** Матовый потёртый металл. Карты общие, у каждого направления шлифовки — свой поворот UV. */
-function metal(angle: number, tint: string, ghost: boolean): MeshPhysicalMaterial {
-  metalMaps ??= scratchedMetal();
-  const key = angle.toFixed(2);
-  let maps = mapClones.get(key);
-  if (!maps) {
-    maps = [metalMaps.map, metalMaps.roughness, metalMaps.bump].map((src) => {
-      const t = src.clone();
-      t.needsUpdate = true;
-      t.repeat.set(0.42, 0.42);
-      t.rotation = angle;
-      return t;
-    });
-    mapClones.set(key, maps);
-  }
+/**
+ * Шлифованная сталь. С настоящими картами — сатиновая поверхность с анизотропным бликом вдоль рисок;
+ * без них — процедурный потёртый металл. Направление рисок задаёт brushUV().
+ */
+function metal(tint: string, ghost: boolean, steel: SteelMaps | null): MeshPhysicalMaterial {
   const c = new Color(tint);
   if (ghost) c.multiplyScalar(0.5);
+  if (steel) {
+    return new MeshPhysicalMaterial({
+      color: c,
+      map: steel.map,
+      vertexColors: true,
+      metalness: 1,
+      roughness: 0.74,
+      roughnessMap: steel.roughness,
+      normalMap: ghost ? null : steel.normal,
+      normalScale: new Vector2(0.55, 0.55),
+      anisotropy: 0.6,
+      envMapIntensity: ghost ? 0.5 : 1,
+    });
+  }
+  fallbackMaps ??= scratchedMetal();
   return new MeshPhysicalMaterial({
     color: c,
-    map: maps[0]!,
+    map: fallbackMaps.map,
     vertexColors: true,
     metalness: 1,
     roughness: 1,
-    roughnessMap: maps[1]!,
-    bumpMap: ghost ? null : maps[2]!,
+    roughnessMap: fallbackMaps.roughness,
+    bumpMap: ghost ? null : fallbackMaps.bump,
     bumpScale: 1.2,
     envMapIntensity: ghost ? 0.55 : 1.05,
   });
@@ -183,7 +208,7 @@ interface Part {
 
 // — Сборка модели —
 
-export function buildK({ ghost }: BuildOptions): KModel {
+export function buildK({ ghost, steel }: BuildOptions): KModel {
   const root = new Group();
   const random = rng(20261102);
   const gk = ghost ? 0.4 : 1;
@@ -195,11 +220,12 @@ export function buildK({ ghost }: BuildOptions): KModel {
   modules.forEach((m, i) => {
     const pts = m.points.map(W);
     const geo = slab(pts, m.depth);
+    brushUV(geo, m.brush);
     shade(geo);
     geo.computeBoundingBox();
     const c = geo.boundingBox!.getCenter(new Vector3());
     geo.translate(-c.x, -c.y, -c.z);
-    const material = metal(m.brush, m.id.startsWith('A') ? '#dcdddf' : '#d2d4d6', ghost);
+    const material = metal(m.id.startsWith('A') ? '#dcdddf' : '#d2d4d6', ghost, steel);
     const mesh = new Mesh(geo, material);
     mesh.position.copy(c);
     root.add(mesh);
@@ -214,8 +240,9 @@ export function buildK({ ghost }: BuildOptions): KModel {
     const tilt = new Vector3((random() - 0.5) * 0.35, (random() - 0.5) * 0.5, (random() - 0.5) * 0.18);
     const s = 0.25 + i * 0.13;
     const c0 = 3.3 + i * 0.09;
+    // Обводка — по острой плите без скругления: у скруглённой рёбра мягкие и EdgesGeometry их не видит
     const edges = new LineSegments(
-      new EdgesGeometry(geo, 25),
+      new EdgesGeometry(slab(pts, m.depth, 0).translate(-c.x, -c.y, -c.z), 25),
       new LineBasicMaterial({ color: 0xf3f0e9, transparent: true, opacity: 0, depthWrite: false }),
     );
     mesh.add(edges);
@@ -260,7 +287,7 @@ export function buildK({ ghost }: BuildOptions): KModel {
     ring = new LineLoop(new BufferGeometry().setFromPoints(pts), new LineBasicMaterial({ color: 0x9aa0b4, transparent: true, opacity: 0, depthWrite: false }));
     root.add(ring);
 
-    const debrisMat = metal(0, '#bfc1c4', false);
+    const debrisMat = metal('#bfc1c4', false, steel);
     for (let i = 0; i < 14; i++) {
       const sx = 0.06 + random() * 0.22;
       const mesh = new Mesh(new BoxGeometry(sx, sx * (0.4 + random() * 2.4), 0.06 + random() * 0.2), debrisMat.clone());

@@ -1,9 +1,12 @@
 /*
  * Материалы 3D-знака из открытых CC0-источников → лёгкие файлы для сайта (src/assets/k/, Vite даёт им хэш в имени):
- *   studio.hdr        — студийное HDRI-окружение: Poly Haven «studio_small_09» (CC0, polyhaven.com,
+ *   studio-rgbe.png   — студийное HDRI-окружение: Poly Haven «studio_small_09» (CC0, polyhaven.com,
  *                       1K: dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr),
  *                       уменьшено и «затемнено»: стены и пол уходят в тень, софтбоксы остаются яркими —
  *                       так металл отражает студию с полосами света, как на предметной съёмке стали.
+ *                       Формат — RGBE в непрозрачном PNG двойной ширины: слева мантиссы RGB, справа экспонента
+ *                       (в канале R). PNG отдаёт любой хостинг и превью-артефакт (.hdr — нет); без альфа-канала
+ *                       браузер не портит значения предумножением. Декодер — src/scripts/k/materials.ts.
  *   steel-color.webp  — альбедо шлифованной стали ambientCG «Metal009» (CC0, ambientcg.com), в оттенках серого;
  *   steel-rough.webp  — её шероховатость;  steel-normal.webp — нормали (OpenGL).
  * Исходники в репозиторий не кладём (≈7 МБ): скачать 1K-версии с сайтов и передать пути.
@@ -35,7 +38,7 @@ const MAX = opt('max', 40);
 const OUT = 'src/assets/k';
 mkdirSync(OUT, { recursive: true });
 
-// ——— HDR: чтение → уменьшение → затемнение → RGBE с RLE ———
+// ——— HDR: чтение → уменьшение → затемнение → RGBE ———
 const { HDRLoader } = await import('three/examples/jsm/loaders/HDRLoader.js');
 const { FloatType } = await import('three');
 const loader = new HDRLoader();
@@ -83,49 +86,36 @@ function rgbe(r, g, b) {
   return [Math.min(255, Math.floor(r * s)), Math.min(255, Math.floor(g * s)), Math.min(255, Math.floor(b * s)), e + 128];
 }
 
-/** RLE одной компоненты строки (формат Radiance «new RLE»). */
-function rle(bytes) {
-  const res = [];
-  let i = 0;
-  while (i < bytes.length) {
-    let run = 1;
-    while (i + run < bytes.length && run < 127 && bytes[i + run] === bytes[i]) run++;
-    if (run >= 3) {
-      res.push(128 + run, bytes[i]);
-      i += run;
-      continue;
-    }
-    const start = i;
-    let len = 0;
-    while (i < bytes.length && len < 128) {
-      if (i + 2 < bytes.length && bytes[i] === bytes[i + 1] && bytes[i] === bytes[i + 2]) break;
-      i++;
-      len++;
-    }
-    res.push(len, ...bytes.slice(start, start + len));
-  }
-  return res;
-}
-
-const chunks = [Buffer.from(`#?RADIANCE\nFORMAT=32-bit_rle_rgbe\n\n-Y ${H} +X ${W}\n`, 'ascii')];
+// Пиксели PNG: [мантисса RGB | экспонента] — ширина 2W, альфа всегда 255
+const png = new Uint8ClampedArray(2 * W * H * 4);
 for (let y = 0; y < H; y++) {
-  const ch = [[], [], [], []];
   for (let x = 0; x < W; x++) {
     const o = (y * W + x) * 3;
-    const px = rgbe(out[o], out[o + 1], out[o + 2]);
-    for (let c = 0; c < 4; c++) ch[c].push(px[c]);
+    const [r, g, b, e] = rgbe(out[o], out[o + 1], out[o + 2]);
+    const m = (y * 2 * W + x) * 4;
+    const x2 = m + W * 4;
+    png.set([r, g, b, 255], m);
+    png.set([e, e, e, 255], x2);
   }
-  chunks.push(Buffer.from([2, 2, W >> 8, W & 255]));
-  for (const c of ch) chunks.push(Buffer.from(rle(c)));
 }
-const hdrOut = Buffer.concat(chunks);
-writeFileSync(join(OUT, 'studio.hdr'), hdrOut);
-console.log(`studio.hdr ${W}×${H}: ${(hdrOut.length / 1024).toFixed(0)} КБ (k=${K}, p=${P})`);
 
 // ——— Карты стали: JPG → WebP через canvas Chromium ———
 const { chromium } = require('playwright');
 const browser = await chromium.launch();
 const page = await browser.newPage();
+const envB64 = await page.evaluate(
+  ({ data, w, h }) => {
+    const c = document.createElement('canvas');
+    c.width = w;
+    c.height = h;
+    c.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(data), w, h), 0, 0);
+    return c.toDataURL('image/png').split(',')[1];
+  },
+  { data: [...png], w: 2 * W, h: H },
+);
+const envBin = Buffer.from(envB64, 'base64');
+writeFileSync(join(OUT, 'studio-rgbe.png'), envBin);
+console.log(`studio-rgbe.png ${2 * W}×${H}: ${(envBin.length / 1024).toFixed(0)} КБ (k=${K}, p=${P})`);
 const jobs = [
   ['Color', 'steel-color.webp', true, 0.82],
   ['Roughness', 'steel-rough.webp', true, 0.86],

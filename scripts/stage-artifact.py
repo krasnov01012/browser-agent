@@ -71,8 +71,8 @@ for root, _, names in os.walk(out):
             css = open(full, encoding='utf-8').read().replace('url(/_astro/', 'url(./')
             open(full, 'w', encoding='utf-8').write(css)
         elif name.endswith('.js'):
-            # URL ассетов из `?url`-импортов ('/_astro/x.hdr') код разрешает через new URL(…, import.meta.url):
-            # модули лежат рядом с ассетами, поэтому достаточно относительного './x.hdr'.
+            # URL ассетов из `?url`-импортов ('/_astro/x.png') код разрешает через new URL(…, import.meta.url):
+            # модули лежат рядом с ассетами, поэтому достаточно относительного './x.png'.
             js = re.sub(r'([`"\'])/_astro/', r'\1./', open(full, encoding='utf-8').read())
             js = fix_assets(js)
             js = re.sub(r'function\((\w)\)\{return`/`\+\1\}', r'function(\1){return new URL(`../`+\1,import.meta.url).href}', js)
@@ -96,4 +96,4 @@ with open(os.path.join(out, 'main.html'), 'w', encoding='utf-8') as f:
 
 with open(os.path.join(out, 'files.json'), 'w', encoding='utf-8') as f:
     json.dump(dict(sorted(files.items())), f, ensure_ascii=False, indent=1)
-print(f'{len(files)} files → {out}/main.html + files.json')
+print(f'{len(files)} files -> {out}/main.html + files.json')  # ASCII: консоль Windows (cp1251) не печатает стрелку

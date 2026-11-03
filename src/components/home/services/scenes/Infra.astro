@@ -3,11 +3,13 @@
  * Инфраструктура и сопровождение: сборка → деплой → мониторинг → бэкапы.
  * Конвейер сверху, серверы в центре, монитор с «пульсом» и стопка снимков-бэкапов.
  */
+import type { SceneText } from '@/content/serviceScenes';
+
 interface Props {
   id: string;
+  t: SceneText['infra'];
 }
-const { id } = Astro.props;
-const stages = ['BUILD', 'TEST', 'DEPLOY'];
+const { id, t } = Astro.props;
 const servers = [92, 136, 180];
 // Длинная линия пульса: прокручивается влево внутри окна монитора
 const pulse = Array.from({ length: 12 }, (_, i) => `l12 0 4 -14 4 26 4 -12 ${i % 3 === 1 ? '6 -6 4 6' : '10 0'} 6 0`).join(' ');
@@ -16,7 +18,7 @@ const pulse = Array.from({ length: 12 }, (_, i) => `l12 0 4 -14 4 26 4 -12 ${i %
 <g>
   <!-- Акт 1: сборка -->
   {
-    stages.map((s, i) => (
+    t.stages.map((s, i) => (
       <g class="ss-in1" style={`--d: ${i * 0.3}s`}>
         <rect x={36 + i * 104} y="30" width="88" height="34" rx="3" class="ss-f" />
         <text x={46 + i * 104} y="44">
@@ -33,7 +35,7 @@ const pulse = Array.from({ length: 12 }, (_, i) => `l12 0 4 -14 4 26 4 -12 ${i %
   <g class="ss-in1" style="--d: 1s">
     <path d="M366 36l18 -9 18 9 -18 9z" class="ss-l"></path>
     <path d="M366 36v20l18 9v-20zM402 36v20l-18 9" class="ss-f"></path>
-    <text x="410" y="50">IMAGE</text>
+    <text x="410" y="50">{t.image}</text>
   </g>
 
   <!-- Акт 2: деплой на серверы -->
@@ -54,13 +56,13 @@ const pulse = Array.from({ length: 12 }, (_, i) => `l12 0 4 -14 4 26 4 -12 ${i %
   <g class="ss-pop2" style="--d: 1.6s">
     <path d="M232 112l16 6v14c0 9 -7 14 -16 18c-9 -4 -16 -9 -16 -18v-14z" class="ss-f"></path>
     <path d="M227 129h10v8h-10z M229 129v-3a3 3 0 0 1 6 0v3" class="ss-c"></path>
-    <text x="232" y="164" text-anchor="middle">TLS</text>
+    <text x="232" y="164" text-anchor="middle">{t.tls}</text>
   </g>
 
   <!-- Акт 3: мониторинг — пульс прокручивается, всплеск разбирается -->
   <g class="ss-in3">
     <rect x="270" y="92" width="190" height="96" rx="4" class="ss-f"></rect>
-    <text x="280" y="106">MONITORING</text>
+    <text x="280" y="106">{t.monitoring}</text>
     <path d="M270 112H460" class="ss-s"></path>
     <path d="M280 168H450" class="ss-s ss-dash"></path>
   </g>
@@ -68,11 +70,11 @@ const pulse = Array.from({ length: 12 }, (_, i) => `l12 0 4 -14 4 26 4 -12 ${i %
     <path d={`M0 40 ${pulse}`} class="ss-c ss-pulse-line"></path>
   </svg>
   <g class="ss-only3" style="--d: .4s">
-    <circle cx="424" cy="104" r="3" class="ss-cf ss-ring"></circle>
-    <text x="356" y="106" class="ss-tc">ALERT → AUTO</text>
+    <circle cx="436" cy="136" r="3" class="ss-cf ss-ring"></circle>
+    <text x="452" y="106" text-anchor="end" class="ss-tc">{t.alert}</text>
   </g>
   <g class="ss-in4" style="--d: 1s">
-    <text x="372" y="106" class="ss-ti">ALL GREEN</text>
+    <text x="452" y="106" text-anchor="end" class="ss-ti">{t.ok}</text>
   </g>
 
   <!-- Акт 4: резервные копии -->
@@ -86,12 +88,11 @@ const pulse = Array.from({ length: 12 }, (_, i) => `l12 0 4 -14 4 26 4 -12 ${i %
     ))
   }
   <g class="ss-in4" style="--d: 1.4s">
-    <text x="392" y="214">SNAPSHOT</text>
-    <text x="392" y="228" class="ss-tc">✓ VERIFIED</text>
-    <text x="392" y="242">RESTORE TESTED</text>
+    <text x="390" y="220">{t.snapshot}</text>
+    <text x="390" y="234" class="ss-tc">✓ {t.verified}</text>
   </g>
   <g class="ss-in4" style="--d: .6s">
-    <text x="36" y="246">UPTIME</text>
+    <text x="36" y="246">{t.uptime}</text>
     <rect x="36" y="254" width="168" height="4" class="ss-faint"></rect>
   </g>
   <rect x="36" y="254" width="168" height="4" class="ss-cf ss-draw4" style="--d: .8s"></rect>

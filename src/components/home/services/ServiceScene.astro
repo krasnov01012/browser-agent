@@ -1,11 +1,13 @@
 ---
 /**
  * «Кинематографичная» схема услуги: короткая сцена из четырёх актов (≈12 с, по кругу).
- * Камера медленно наезжает, по кадру проходит свет, внизу — подписи актов с прогрессом.
- * Всё движение — transform / opacity / clip-path (и offset-distance у точек-пакетов) и только у
+ * Камера медленно наезжает, по кадру проходит свет, под кадром — пояснение текущего акта,
+ * ниже — подписи актов с прогрессом. Все акты идут одним кругом и перезапускаются вместе
+ * (services.ts, по концу анимации камеры), поэтому на новом круге не остаётся «хвостов».
+ * Движение — transform / opacity / clip-path (и offset-distance у точек-пакетов), только у
  * открытой панели в кадре (.motion [data-active] .ss.is-playing). Без движения виден финальный кадр.
  * Если для услуги есть видео (src/content/serviceMedia.ts) — оно ложится поверх сцены.
- * Сами сцены — ./scenes/*, общие классы и ключевые кадры — ./scene.css.
+ * Сцены — ./scenes/*, подписи в них — src/content/serviceScenes.ts, классы и кадры — ./scene.css.
  */
 import Web from './scenes/Web.astro';
 import Systems from './scenes/Systems.astro';
@@ -13,19 +15,22 @@ import Ai from './scenes/Ai.astro';
 import Data from './scenes/Data.astro';
 import Infra from './scenes/Infra.astro';
 import { serviceMedia } from '@/content/serviceMedia';
+import { sceneText } from '@/content/serviceScenes';
+import type { Locale } from '@/i18n';
 import './scene.css';
 
 interface Props {
   kind: string;
+  locale: Locale;
   acts: readonly string[];
+  captions: readonly string[];
 }
-const { kind, acts } = Astro.props;
-const scenes = { web: Web, systems: Systems, ai: Ai, data: Data, infra: Infra } as const;
-const Scene = scenes[kind as keyof typeof scenes];
+const { kind, locale, acts, captions } = Astro.props;
+const text = sceneText[locale];
 const media = serviceMedia[kind];
 ---
 
-<figure class={`ss ss--${kind}`} data-play>
+<figure class={`ss ss--${kind}`} data-play data-svc-scene>
   <svg class="ss__svg" viewBox="0 0 480 300" fill="none" aria-hidden="true">
     <defs>
       <pattern id={`ss-grid-${kind}`} width="20" height="20" patternUnits="userSpaceOnUse">
@@ -47,7 +52,13 @@ const media = serviceMedia[kind];
       </linearGradient>
     </defs>
     <rect width="480" height="300" fill={`url(#ss-grid-${kind})`}></rect>
-    <g class="ss__cam">{Scene && <Scene id={kind} />}</g>
+    <g class="ss__cam">
+      {kind === 'web' && <Web id={kind} t={text.web} />}
+      {kind === 'systems' && <Systems id={kind} t={text.systems} />}
+      {kind === 'ai' && <Ai id={kind} t={text.ai} />}
+      {kind === 'data' && <Data id={kind} t={text.data} />}
+      {kind === 'infra' && <Infra id={kind} t={text.infra} />}
+    </g>
     <g transform="skewX(-16)"><rect class="ss__sweep" x="-190" y="-20" width="110" height="340" fill={`url(#ss-sweep-${kind})`}></rect></g>
     <rect width="480" height="300" fill={`url(#ss-vig-${kind})`}></rect>
     <path class="ss__corners" d="M10 22V10H22 M458 10H470V22 M470 278V290H458 M22 290H10V278"></path>
@@ -59,6 +70,10 @@ const media = serviceMedia[kind];
       </video>
     )
   }
+  <!-- Пояснение текущего акта (для экранных дикторов те же тексты — в списке актов ниже) -->
+  <div class="ss__sub" aria-hidden="true">
+    {captions.map((c, i) => <p class={`ss__cap ss__cap--${i + 1}`}>{c}</p>)}
+  </div>
   <figcaption class="ss__acts">
     <ol>
       {
@@ -66,6 +81,7 @@ const media = serviceMedia[kind];
           <li>
             <span class="ss__n">{String(i + 1).padStart(2, '0')}</span>
             <span class="ss__t">{a}</span>
+            <span class="visually-hidden">— {captions[i]}</span>
             <i class="ss__bar" />
           </li>
         ))

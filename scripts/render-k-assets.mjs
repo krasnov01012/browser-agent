@@ -26,7 +26,7 @@ try {
   const page = await ctx.newPage();
   await page.goto(`http://localhost:${port}/en/`, { waitUntil: 'networkidle' });
   await page.addStyleTag({
-    content: `html,body,.hero{background:transparent!important}.hero::before,.k-blueprint,.k-stage__hud,.site-header,.hero__text,.hero__caps{display:none!important}
+    content: `html,body,.hero{background:transparent!important}.hero::before,.k-blueprint,.site-header,.hero__text,.hero__caps{display:none!important}
       .k-stage{position:fixed!important;left:0;top:0;width:1000px!important;height:1000px;margin:0!important}`,
   });
   await page.waitForFunction(() => document.querySelector('[data-k-stage]')?.getAttribute('data-state') === 'live');

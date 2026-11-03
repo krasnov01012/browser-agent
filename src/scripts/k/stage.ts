@@ -26,10 +26,6 @@ export async function initKStage(): Promise<void> {
   if (!stage || !canvas || !hero) return;
 
   const still = reducedMotion();
-  const hud = {
-    assembly: stage.querySelector<HTMLElement>('[data-hud-assembly]'),
-    tilt: stage.querySelector<HTMLElement>('[data-hud-tilt]'),
-  };
 
   const fallback = (reason: string): void => {
     stage.dataset.state = 'fallback';
@@ -47,7 +43,7 @@ export async function initKStage(): Promise<void> {
   try {
     const { KScene } = await import('./scene');
     const coarse = matchMedia('(pointer: coarse)').matches;
-    let lastHud = 0;
+    let lastState = 0;
     scene = await KScene.create({
       canvas,
       still,
@@ -56,13 +52,12 @@ export async function initKStage(): Promise<void> {
         window.clearTimeout(timeout);
         if (stage.dataset.state !== 'fallback') stage.dataset.state = 'live';
       },
-      onState: ({ assembly, tiltX, tiltY }) => {
+      // Прогресс сборки — невидимым атрибутом для QA-скриптов (подписи на экране убраны по просьбе владельца)
+      onState: ({ assembly }) => {
         const now = performance.now();
-        // Финальное значение (100%) показываем всегда, остальное — не чаще ~16 раз/с.
-        if (now - lastHud < 60 && assembly < 1) return;
-        lastHud = now;
-        if (hud.assembly) hud.assembly.textContent = `${String(Math.round(assembly * 100)).padStart(3, '0')}%`;
-        if (hud.tilt) hud.tilt.textContent = `${fmt(tiltX)}° ${fmt(tiltY)}°`;
+        if (now - lastState < 60 && assembly < 1) return;
+        lastState = now;
+        stage.dataset.assembly = String(Math.round(assembly * 100));
       },
     });
   } catch (error) {
@@ -116,9 +111,4 @@ export async function initKStage(): Promise<void> {
 
   stage.dataset.mode = still ? 'still' : 'motion';
   scene.start();
-}
-
-function fmt(v: number): string {
-  const s = v >= 0 ? '+' : '−';
-  return `${s}${Math.abs(v).toFixed(1)}`;
 }

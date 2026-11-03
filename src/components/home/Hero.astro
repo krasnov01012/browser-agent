@@ -37,14 +37,6 @@ const geo = describe();
       <KBlueprint beamAngle={geo.beamAngle} stemWidth={geo.stemWidth} height={geo.height} />
       <img class="k-stage__poster" src="/media/k/k-render.webp" alt="" width="1000" height="1000" decoding="async" />
       <canvas class="k-stage__canvas" role="img" aria-label={dict.hero.kAlt}></canvas>
-      <div class="k-stage__hud label" aria-hidden="true">
-        <span class="k-stage__hud-model">{dict.hero.hud.model}</span>
-        <span class="k-stage__hud-live">
-          <span>{dict.hero.hud.assembly} <b data-hud-assembly>000%</b></span>
-          <span>{dict.hero.hud.tilt} <b data-hud-tilt>+0.0° +0.0°</b></span>
-        </span>
-        <span class="k-stage__hud-static">{dict.hero.hud.fallback}</span>
-      </div>
     </div>
   </div>
 
@@ -209,42 +201,6 @@ const geo = describe();
     opacity: 1;
   }
 
-  .k-stage__hud {
-    position: absolute;
-    left: 6%;
-    right: 4%;
-    bottom: 1%;
-    z-index: 2;
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    font-size: 0.6875rem;
-    color: var(--steel-light);
-    pointer-events: none;
-  }
-
-  .k-stage__hud b {
-    font-weight: 500;
-    color: var(--ivory);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .k-stage__hud-live {
-    display: inline-flex;
-    gap: 22px;
-  }
-
-  .k-stage__hud-static,
-  .k-stage[data-state='fallback'] .k-stage__hud-live,
-  :global(.no-js) .k-stage__hud-live {
-    display: none;
-  }
-
-  .k-stage[data-state='fallback'] .k-stage__hud-static,
-  :global(.no-js) .k-stage__hud-static {
-    display: inline;
-  }
-
   /* ——— Направления внизу Hero ——— */
 
   /* Плашка перекрывает линии чертежа: они обрываются на верхней границе ряда */
@@ -337,10 +293,6 @@ const geo = describe();
 
     .hero__inner {
       padding-bottom: 56px;
-    }
-
-    .k-stage__hud-live > span:last-child {
-      display: none;
     }
   }
 </style>

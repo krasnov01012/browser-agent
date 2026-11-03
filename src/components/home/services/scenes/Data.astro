@@ -4,11 +4,13 @@
  * Слева в узел входят «разнородные» данные (разные формы), справа выходят одинаковые записи.
  * На графике — только форма линий, без чисел: это схема, а не отчёт.
  */
+import type { SceneText } from '@/content/serviceScenes';
+
 interface Props {
   id: string;
+  t: SceneText['data'];
 }
-const { id } = Astro.props;
-const sources = ['API', 'CSV', 'CRM', 'SHOP'];
+const { id, t } = Astro.props;
 const ys = [56, 104, 152, 200];
 const wire = (y: number) => `M84 ${y}C 118 ${y}, 120 128, 150 128`;
 ---
@@ -17,7 +19,7 @@ const wire = (y: number) => `M84 ${y}C 118 ${y}, 120 128, 150 128`;
 <g transform="translate(0 14)">
   <!-- Акт 1: источники и «сырые» данные -->
   {
-    sources.map((s, i) => (
+    t.sources.map((s, i) => (
       <g class="ss-in1" style={`--d: ${i * 0.2}s`}>
         <rect x="22" y={ys[i]! - 15} width="62" height="30" rx="3" class="ss-f" />
         <text x="53" y={ys[i]! + 3} text-anchor="middle">
@@ -39,7 +41,7 @@ const wire = (y: number) => `M84 ${y}C 118 ${y}, 120 128, 150 128`;
     <path d="M150 104L186 128L150 152Z" fill={`url(#ss-steel-${id})`} class="ss-l"></path>
     <path d="M186 104V152" class="ss-c"></path>
   </g>
-  <text x="138" y="174" class="ss-in2" style="--d: .3s">NORMALIZE</text>
+  <text x="168" y="174" text-anchor="middle" class="ss-in2" style="--d: .3s">{t.normalize}</text>
   <path d="M186 128H262" class="ss-l ss-draw2" style="--d: .4s"></path>
   <g class="ss-in2" style="--d: .6s">
     {[0, 1, 2, 3].map((i) => <rect x="-3" y="-3" width="6" height="6" class="ss-cf ss-run" style={`offset-path: path('M186 128H262'); --d: ${i * 0.38}s; --run: 1.5s`} />)}
@@ -57,13 +59,13 @@ const wire = (y: number) => `M84 ${y}C 118 ${y}, 120 128, 150 128`;
     <ellipse cx="290" cy="94" rx="28" ry="9" class="ss-f"></ellipse>
   </g>
   {[116, 136, 156].map((y, i) => <path d={`M262 ${y}A28 9 0 0 0 318 ${y}`} class="ss-l ss-in3" style={`--d: ${0.4 + i * 0.35}s`} />)}
-  <text x="268" y="186" class="ss-in3" style="--d: .3s">POSTGRES</text>
+  <text x="290" y="186" text-anchor="middle" class="ss-in3" style="--d: .3s">{t.db}</text>
   <path d="M318 128H340" class="ss-l ss-draw3" style="--d: 1.4s"></path>
 
   <!-- Акт 4: аналитика -->
   <g class="ss-in4">
     <rect x="340" y="62" width="122" height="150" rx="4" class="ss-f"></rect>
-    <text x="348" y="76">DASHBOARD</text>
+    <text x="348" y="76">{t.dashboard}</text>
     <path d="M348 82H454" class="ss-s"></path>
     <path d="M350 196H452M350 168H452M350 140H452M350 112H452" class="ss-s ss-dash"></path>
   </g>
@@ -72,8 +74,8 @@ const wire = (y: number) => `M84 ${y}C 118 ${y}, 120 128, 150 128`;
   <circle cx="452" cy="92" r="3" class="ss-cf ss-glow ss-in4" style="--d: 2s"></circle>
   <g class="ss-in4" style="--d: 1.6s">
     <rect x="340" y="222" width="122" height="36" rx="4" class="ss-f"></rect>
-    <text x="348" y="236">SYNC</text>
-    <text x="348" y="250" class="ss-ti">SCHEDULED</text>
+    <text x="348" y="236">{t.sync}</text>
+    <text x="348" y="250" class="ss-ti">{t.scheduled}</text>
     <circle cx="450" cy="233" r="2.4" class="ss-cf ss-blink"></circle>
   </g>
 </g>

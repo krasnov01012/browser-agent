@@ -46,7 +46,7 @@ const items = dict.services.items;
                     <span class="label">{item.id.toUpperCase()}</span>
                   </div>
                   <div class="svc__diagram">
-                    <ServiceScene kind={item.id} acts={item.acts} />
+                    <ServiceScene kind={item.id} locale={locale} acts={item.acts} captions={item.captions} />
                   </div>
                   <p class="svc__desc">{item.description}</p>
                   <p class="label svc__deliver-label">{dict.services.deliverablesLabel}</p>

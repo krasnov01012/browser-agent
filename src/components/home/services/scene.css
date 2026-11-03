@@ -8,6 +8,9 @@
  *   ss-run    — точка-пакет бежит по style="offset-path: path(…)" (длительность --run, задержка --d).
  * Сдвиг внутри акта — style="--d: .4s". Без движения (нет .motion) все ss-in*, ss-draw* видны —
  * это финальный кадр; ss-only1…3 и ss-upto* скрыты, ss-only4 виден.
+ * Актовые анимации играют один раз (iteration 1); весь круг перезапускает services.ts, когда кончилась
+ * анимация камеры, — иначе элементы с задержкой --d начинали бы новый круг позже остальных и «хвосты»
+ * прошлого акта гасли бы поверх нового. Бесконечные только «живые» детали: вращение, мигание, пакеты.
  */
 
 .ss {
@@ -94,7 +97,7 @@
 .ss text {
   font-family: var(--font-mono);
   font-size: 8.5px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   fill: var(--steel-light);
   stroke: none;
 }
@@ -110,6 +113,40 @@
 .ss text.ss-big {
   font-size: 11px;
 }
+
+/* ——— Пояснение текущего акта (под кадром; без движения — последнее) ——— */
+
+.ss__sub {
+  display: grid;
+  margin-top: 14px;
+}
+
+.ss__cap {
+  grid-area: 1 / 1;
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: rgb(243 240 233 / 0.88);
+  opacity: 0;
+}
+
+.ss__cap--4 {
+  opacity: 1;
+}
+
+.motion [data-active] .ss.is-playing .ss__cap {
+  animation: var(--ss-dur) linear 1 both;
+}
+
+.motion [data-active] .ss.is-playing .ss__cap--1 { animation-name: ss-cap1; }
+.motion [data-active] .ss.is-playing .ss__cap--2 { animation-name: ss-cap2; }
+.motion [data-active] .ss.is-playing .ss__cap--3 { animation-name: ss-cap3; }
+.motion [data-active] .ss.is-playing .ss__cap--4 { animation-name: ss-cap4; }
+
+@keyframes ss-cap1 { 0% { opacity: 0; transform: translateY(4px); } 3%, 22% { opacity: 1; transform: none; } 25%, 100% { opacity: 0; } }
+@keyframes ss-cap2 { 0%, 25% { opacity: 0; transform: translateY(4px); } 28%, 47% { opacity: 1; transform: none; } 50%, 100% { opacity: 0; } }
+@keyframes ss-cap3 { 0%, 50% { opacity: 0; transform: translateY(4px); } 53%, 72% { opacity: 1; transform: none; } 75%, 100% { opacity: 0; } }
+@keyframes ss-cap4 { 0%, 75% { opacity: 0; transform: translateY(4px); } 78%, 95% { opacity: 1; transform: none; } 100% { opacity: 0; } }
 
 /* ——— Подписи актов ——— */
 
@@ -189,18 +226,18 @@
 .motion [data-active] .ss.is-playing .ss__cam {
   transform-box: view-box;
   transform-origin: 240px 150px;
-  animation: ss-cam var(--ss-dur) var(--ease-out) infinite both;
+  animation: ss-cam var(--ss-dur) var(--ease-out) 1 both;
 }
 
 .motion [data-active] .ss.is-playing .ss__sweep {
-  animation: ss-sweep var(--ss-dur) linear infinite both;
+  animation: ss-sweep var(--ss-dur) linear 1 both;
 }
 
 .motion [data-active] .ss.is-playing :is(.ss-in1, .ss-in2, .ss-in3, .ss-in4, .ss-only1, .ss-only2, .ss-only3, .ss-only4, .ss-upto1, .ss-upto2, .ss-upto3, .ss-draw1, .ss-draw2, .ss-draw3, .ss-draw4, .ss-drawv1, .ss-drawv2, .ss-drawv3, .ss-drawv4, .ss-grow2, .ss-grow3, .ss-grow4, .ss-pop2, .ss-pop3, .ss-pop4) {
   animation-duration: var(--ss-dur);
   animation-timing-function: var(--ease-out);
   animation-delay: var(--d, 0s);
-  animation-iteration-count: infinite;
+  animation-iteration-count: 1;
   animation-fill-mode: both;
 }
 
@@ -248,7 +285,7 @@
 }
 
 .motion [data-active] .ss.is-playing .ss-shift {
-  animation: ss-shift var(--ss-dur) var(--ease-out) infinite both;
+  animation: ss-shift var(--ss-dur) var(--ease-out) 1 both;
 }
 
 /* Линия «пульса» мониторинга: бесшовная прокрутка (период узора — 120 единиц) */
@@ -262,7 +299,7 @@
 
 /* Влёт к своему месту из смещения --fx/--fy (акт 1) */
 .motion [data-active] .ss.is-playing .ss-fly {
-  animation: ss-fly var(--ss-dur) cubic-bezier(0.16, 1, 0.3, 1) var(--d, 0s) infinite both;
+  animation: ss-fly var(--ss-dur) cubic-bezier(0.16, 1, 0.3, 1) var(--d, 0s) 1 both;
 }
 
 @keyframes ss-fly {
@@ -273,7 +310,7 @@
 
 /* Подписи актов: текущий ярко, пройденные приглушены, будущие тусклые; полоски заполняются */
 .motion [data-active] .ss.is-playing .ss__acts li {
-  animation: var(--ss-dur) linear infinite both;
+  animation: var(--ss-dur) linear 1 both;
 }
 
 .motion [data-active] .ss.is-playing .ss__acts li:nth-child(1) { animation-name: ss-act1; }
@@ -282,7 +319,7 @@
 .motion [data-active] .ss.is-playing .ss__acts li:nth-child(4) { animation-name: ss-act4; }
 
 .motion [data-active] .ss.is-playing .ss__acts li .ss__bar::after {
-  animation: var(--ss-dur) linear infinite both;
+  animation: var(--ss-dur) linear 1 both;
 }
 
 .motion [data-active] .ss.is-playing .ss__acts li:nth-child(1) .ss__bar::after { animation-name: ss-bar1; }

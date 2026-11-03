@@ -38,12 +38,6 @@ export const en: Dict = {
     ctaSecondary: 'Explore work',
     capabilitiesLabel: 'Capabilities',
     kAlt: 'Architectural K — the Krasnoff Development mark: a vertical stem and two diagonal beams with a coral seam at the joint.',
-    hud: {
-      model: 'K / V03 · MODULAR',
-      assembly: 'Assembly',
-      tilt: 'Tilt',
-      fallback: 'Static mark',
-    },
     scroll: 'Scroll',
   },
   services: {
@@ -61,6 +55,7 @@ export const en: Dict = {
           'Websites, online stores, SaaS platforms, customer portals and web applications — designed around how your customers actually use them.',
         deliverables: ['Websites & eCommerce', 'SaaS & web applications', 'Customer portals', 'Content management'],
         acts: ['Wireframe', 'Interface', 'Responsive', 'Launch'],
+        captions: ['First the wireframe: page structure and the user’s path', 'Then the interface: design, copy, buttons and forms', 'One build for both desktop and mobile', 'Build, tests and release: the product goes live'],
       },
       {
         id: 'systems',
@@ -70,6 +65,7 @@ export const en: Dict = {
           'CRM, internal tools, admin panels and bespoke business logic — software shaped around your workflows instead of the other way round.',
         deliverables: ['CRM & internal systems', 'Admin panels', 'Business logic & workflows', 'Custom applications'],
         acts: ['Modules', 'Core', 'Roles', 'Workflows'],
+        captions: ['Separate modules for your processes: CRM, admin, API, reports', 'A core with your business logic ties them into one system', 'Every role gets its own access rights', 'Data moves between modules, tasks join a queue'],
       },
       {
         id: 'ai',
@@ -79,6 +75,7 @@ export const en: Dict = {
           'AI agents, assistants and LLM integrations — used where they simplify a real process, with deterministic checks where accuracy matters.',
         deliverables: ['AI agents & assistants', 'LLM integration', 'Workflow automation', 'Document & data processing'],
         acts: ['Request', 'Model', 'Checks', 'Human decides'],
+        captions: ['A request arrives in plain language — chat, email or a form', 'The model works out the task and drafts an answer or action', 'Code checks the result: format, rules, permissions', 'Important actions run only after a person approves'],
       },
       {
         id: 'data',
@@ -88,6 +85,7 @@ export const en: Dict = {
           'APIs, ETL pipelines, databases and dashboards — connecting the services you already use into one reliable flow of data.',
         deliverables: ['API integrations', 'ETL & data pipelines', 'Database design', 'Analytics & dashboards'],
         acts: ['Sources', 'Normalize', 'Store', 'Insight'],
+        captions: ['Data comes from different services in different formats', 'We bring it all to one format', 'And store it in a reliable database', 'Dashboards and scheduled sync'],
       },
       {
         id: 'infra',
@@ -97,6 +95,7 @@ export const en: Dict = {
           'Deployment, hosting, domains and TLS, monitoring, backups, updates and further development — a separate paid service after launch, scoped by agreement.',
         deliverables: ['Deployment & hosting', 'Domains & TLS', 'Monitoring & backups', 'Maintenance & development'],
         acts: ['Build', 'Deploy', 'Monitor', 'Backup'],
+        captions: ['Code is built and passes automated tests', 'Released to servers — over HTTPS', 'Monitoring: you hear about an issue right away', 'Backups that are actually checked'],
       },
     ],
   },

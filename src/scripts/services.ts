@@ -40,6 +40,18 @@ export function initServices(): void {
     trigger?.addEventListener('pointerleave', () => clearTimeout(hoverTimer));
   }
 
+  // Сцены услуг: круг (≈12 с) перезапускается целиком, когда закончилась анимация камеры. Акты играют
+  // по одному разу, поэтому элементы с задержкой не тянут «хвосты» прошлого круга в новый (scene.css).
+  for (const scene of root.querySelectorAll<HTMLElement>('[data-svc-scene]')) {
+    scene.addEventListener('animationend', (e) => {
+      if (e.animationName !== 'ss-cam') return;
+      for (const a of scene.getAnimations({ subtree: true })) {
+        a.currentTime = 0;
+        a.play();
+      }
+    });
+  }
+
   // На desktop всегда открыта ровно одна панель.
   desktop.addEventListener('change', (e) => {
     if (e.matches && !items.some((i) => i.hasAttribute('data-active'))) activate(items[0] ?? null);
